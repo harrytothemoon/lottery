@@ -1,19 +1,19 @@
 {
   "files": {
-    "main.css": "/lottery-app/static/css/main.6d4c643c.css",
-    "main.js": "/lottery-app/static/js/main.710f0e51.js",
-    "static/js/885.99842fc5.chunk.js": "/lottery-app/static/js/885.99842fc5.chunk.js",
-    "static/js/453.a13d2d30.chunk.js": "/lottery-app/static/js/453.a13d2d30.chunk.js",
-    "static/media/spin.wav": "/lottery-app/static/media/spin.5f0c8d85d4f9155cd6b6.wav",
-    "static/media/win.mp3": "/lottery-app/static/media/win.4edd5b2e303643833df5.mp3",
-    "index.html": "/lottery-app/index.html",
-    "main.6d4c643c.css.map": "/lottery-app/static/css/main.6d4c643c.css.map",
-    "main.710f0e51.js.map": "/lottery-app/static/js/main.710f0e51.js.map",
-    "885.99842fc5.chunk.js.map": "/lottery-app/static/js/885.99842fc5.chunk.js.map",
-    "453.a13d2d30.chunk.js.map": "/lottery-app/static/js/453.a13d2d30.chunk.js.map"
+    "main.css": "/lottery-lawin/static/css/main.c3feb8bc.css",
+    "main.js": "/lottery-lawin/static/js/main.22cd55b2.js",
+    "static/js/885.99842fc5.chunk.js": "/lottery-lawin/static/js/885.99842fc5.chunk.js",
+    "static/js/453.a13d2d30.chunk.js": "/lottery-lawin/static/js/453.a13d2d30.chunk.js",
+    "static/media/spin.wav": "/lottery-lawin/static/media/spin.5f0c8d85d4f9155cd6b6.wav",
+    "static/media/win.mp3": "/lottery-lawin/static/media/win.1a4aa36e26105c19f7fc.mp3",
+    "index.html": "/lottery-lawin/index.html",
+    "main.c3feb8bc.css.map": "/lottery-lawin/static/css/main.c3feb8bc.css.map",
+    "main.22cd55b2.js.map": "/lottery-lawin/static/js/main.22cd55b2.js.map",
+    "885.99842fc5.chunk.js.map": "/lottery-lawin/static/js/885.99842fc5.chunk.js.map",
+    "453.a13d2d30.chunk.js.map": "/lottery-lawin/static/js/453.a13d2d30.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.6d4c643c.css",
-    "static/js/main.710f0e51.js"
+    "static/css/main.c3feb8bc.css",
+    "static/js/main.22cd55b2.js"
   ]
 }
