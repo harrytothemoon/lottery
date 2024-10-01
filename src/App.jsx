@@ -170,7 +170,7 @@ const FileUpload = ({ onFileUpload, onPrizeChange, onDigitCountChange }) => {
 
 const FancyTable = ({ data, columns, title, totalTickets, handleDownload }) => (
   <div className="mb-4 bg-[#0a52a0] rounded-lg shadow overflow-hidden">
-    <h3 className="font-bold text-2xl text-[#ecdc91] p-4 bg-[#094682] sticky top-0 z-10  justify-between flex">
+    <h3 className="font-bold text-2xl text-[#ecdc91] p-4 bg-[#094682] sticky top-0 z-10  justify-between items-center flex">
       {title}
       <span className="font-bold text-2xl text-[#ecdc91]">
         {totalTickets !== undefined && `Total Tickets: ${totalTickets}`}
