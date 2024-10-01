@@ -1,18 +1,29 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent } from "./components/ui/card";
 import { Button } from "./components/ui/button";
-import useSound from "use-sound"; // 您需要安装这个包：npm install use-sound
-
-// 假设您已经有这些音效文件
+import { Input } from "./components/ui/input";
+import useSound from "use-sound";
+import Confetti from "react-confetti";
 import spinSound from "./sounds/spin.wav";
 import winSound from "./sounds/win.mp3";
 
 // 新增 Modal 组件
 const Modal = ({ isOpen, onClose, children }) => {
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShowConfetti(true);
+    } else {
+      setShowConfetti(false);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      {showConfetti && <Confetti gravity={0.4} initialVelocityY={100} />}
       <Card className="w-[90%] max-w-[500px] bg-[#0a52a0] shadow-2xl rounded-3xl border-4 border-[#ecdc91]">
         <CardContent className="p-6">
           {children}
@@ -27,6 +38,7 @@ const Modal = ({ isOpen, onClose, children }) => {
     </div>
   );
 };
+
 const Reel = ({ spinning, stopSymbol }) => {
   const symbols = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
   const [position, setPosition] = useState(
@@ -52,22 +64,22 @@ const Reel = ({ spinning, stopSymbol }) => {
   );
 };
 
-const SlotMachine = React.forwardRef(({ onComplete }, ref) => {
+const SlotMachine = React.forwardRef(({ onComplete, digitCount }, ref) => {
   const [spinning, setSpinning] = useState(false);
-  const [stopSymbols, setStopSymbols] = useState(Array(6).fill(null));
+  const [stopSymbols, setStopSymbols] = useState(Array(digitCount).fill(null));
 
   const spin = useCallback(
     (result) => {
       setSpinning(true);
-      setStopSymbols(Array(6).fill(null));
+      setStopSymbols(Array(digitCount).fill(null));
 
       setTimeout(() => {
         setSpinning(false);
         setStopSymbols(result);
         onComplete(result.join(""));
-      }, 5000);
+      }, 4000);
     },
-    [onComplete]
+    [onComplete, digitCount]
   );
 
   React.useImperativeHandle(ref, () => ({
@@ -83,39 +95,57 @@ const SlotMachine = React.forwardRef(({ onComplete }, ref) => {
   );
 });
 
-const FileUpload = ({ onFileUpload }) => {
+const FileUpload = ({ onFileUpload, onPrizeChange, onDigitCountChange }) => {
   const fileInputRef = useRef(null);
+  const [prize, setPrize] = useState("");
 
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target.result;
-        const accountList = content
-          .split("\n")
-          .slice(1)
-          .reduce((acc, line) => {
-            const [username, ticket] = line.trim().split(",");
-            if (!acc[username]) {
-              acc[username] = [];
-            }
-            acc[username].push(ticket);
-            return acc;
-          }, {});
-        onFileUpload(accountList);
-      };
-      reader.readAsText(file);
-    }
+  const handlePrizeChange = (event) => {
+    setPrize(event.target.value);
+    onPrizeChange(event.target.value);
   };
 
-  const handleButtonClick = () => {
-    fileInputRef.current.click();
-  };
+ const handleFileChange = (event) => {
+   const file = event.target.files[0];
+   if (file) {
+     const reader = new FileReader();
+     reader.onload = (e) => {
+       const content = e.target.result;
+       const lines = content.split("\n").slice(1);
+       const accountList = lines.reduce((acc, line) => {
+         const [username, ticket] = line.trim().split(",");
+         if (!acc[username]) {
+           acc[username] = [];
+         }
+         acc[username].push(ticket);
+         return acc;
+       }, {});
+
+       // 确定最大位数
+       const maxTicket = lines.reduce((max, line) => {
+         const ticket = line.trim().split(",")[1];
+         const numericPart = ticket.replace(/^\D+/, "");
+         return numericPart.length > max.length ? numericPart : max;
+       }, "");
+       const digits = maxTicket.length;
+       onDigitCountChange(digits);
+
+       onFileUpload(accountList);
+     };
+     reader.readAsText(file);
+   }
+ };
 
   return (
     <div className="mb-4">
-      <label className="block text-[#ecdc91] mb-2">
+      <label className="block text-[#ecdc91] mb-2">Enter Prize:</label>
+      <Input
+        type="text"
+        value={prize}
+        onChange={handlePrizeChange}
+        placeholder="Enter the prize for this draw"
+        className="w-full bg-[#0a52a0] text-[#ecdc91] border-[#ecdc91]"
+      />
+      <label className="block text-[#ecdc91] mb-2 mt-2">
         Upload Account List (CSV):
       </label>
       <input
@@ -126,23 +156,35 @@ const FileUpload = ({ onFileUpload }) => {
         className="hidden"
       />
       <Button
-        onClick={handleButtonClick}
-        className="w-full bg-gradient-to-r from-[#ecdc91] to-[#ffb600] hover:opacity-90 text-[#0a52a0] font-bold py-2 px-4 rounded"
+        onClick={() => fileInputRef.current.click()}
+        className="w-full bg-gradient-to-r from-[#ecdc91] to-[#ffb600] hover:opacity-90 text-[#0a52a0] font-bold py-2 px-4 rounded mb-4"
       >
         Choose File
       </Button>
-      <p className="mt-2 text-[#ecdc91] text-sm">
+      {/* <p className="mt-2 text-[#ecdc91] text-sm mb-4">
         {fileInputRef.current?.files[0]?.name || "No file chosen"}
-      </p>
+      </p> */}
     </div>
   );
 };
 
-const FancyTable = ({ data, columns, title }) => (
+const FancyTable = ({ data, columns, title, totalTickets, handleDownload }) => (
   <div className="mb-4 bg-[#0a52a0] rounded-lg shadow overflow-hidden">
-    <h3 className="font-bold text-lg text-[#ecdc91] p-4 bg-[#094682] sticky top-0 z-10">
+    <h3 className="font-bold text-2xl text-[#ecdc91] p-4 bg-[#094682] sticky top-0 z-10  justify-between flex">
       {title}
+      <span className="font-bold text-2xl text-[#ecdc91]">
+        {totalTickets !== undefined && `Total Tickets: ${totalTickets}`}
+        {handleDownload !== undefined && (
+          <Button
+            onClick={handleDownload}
+            className="bg-gradient-to-r from-[#ecdc91] to-[#ffb600] hover:opacity-90 text-[#0a52a0] font-bold py-2 px-2 rounded"
+          >
+            Download
+          </Button>
+        )}
+      </span>
     </h3>
+
     <div className="overflow-y-auto max-h-[calc(100vh-300px)]">
       <table className="w-full">
         <thead className="sticky top-0 z-10">
@@ -181,23 +223,44 @@ const AccountList = ({ accounts }) => {
     tickets.map((ticket) => ({ username, ticket }))
   );
 
+  const totalTickets = data.length;
+
   return (
     <FancyTable
       data={data}
       columns={["Username", "Ticket"]}
       title="Account List"
+      totalTickets={totalTickets}
     />
   );
 };
 
-const WinnersList = ({ winners }) => (
-  <FancyTable
-    data={winners}
-    columns={["Username", "Ticket"]}
-    title="Winners List"
-  />
-);
+const WinnersList = ({ winners }) => {
+  const handleDownload = () => {
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      "Username,Ticket,Prize\n" +
+      winners.map((w) => `${w.username},${w.ticket},${w.prize}`).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "winners_list.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
+  return (
+    <div>
+      <FancyTable
+        data={winners}
+        columns={["Username", "Ticket", "Prize"]}
+        title="Winners List"
+        handleDownload={handleDownload}
+      />
+    </div>
+  );
+};
 
 const App = () => {
   const [accountList, setAccountList] = useState({});
@@ -205,12 +268,14 @@ const App = () => {
   const [spinning, setSpinning] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentWinner, setCurrentWinner] = useState(null);
+  const [currentPrize, setCurrentPrize] = useState("");
+  const [digitCount, setDigitCount] = useState(4);
   const slotMachineRef = useRef(null);
 
   const [playSpinSound, { stop: stopSpinSound }] = useSound(spinSound, {
     loop: true,
   });
-  const [playWinSound] = useSound(winSound);
+  const [playWinSound, { stop: stopWinSound }] = useSound(winSound);
 
   const handleSpin = useCallback(() => {
     if (Object.keys(accountList).length === 0) {
@@ -219,13 +284,11 @@ const App = () => {
     }
 
     const allTickets = Object.entries(accountList).flatMap(
-      ([username, tickets]) =>
-        tickets.map((ticket) => ({ username, ticket }))
+      ([username, tickets]) => tickets.map((ticket) => ({ username, ticket }))
     );
 
     const remainingTickets = allTickets.filter(
-      (ticket) =>
-        !winners.some((winner) => winner.ticket === ticket.ticket)
+      (ticket) => !winners.some((winner) => winner.ticket === ticket.ticket)
     );
 
     if (remainingTickets.length === 0) {
@@ -236,40 +299,66 @@ const App = () => {
     setSpinning(true);
     playSpinSound();
 
-    const randomIndex = Math.floor(Math.random() * remainingTickets.length);
-    const winner = remainingTickets[randomIndex];
-    const newNumbers = winner.ticket.slice(-6).split(""); // 修改这里以使用最后6位数字
+  const randomIndex = Math.floor(Math.random() * remainingTickets.length);
+  const winner = remainingTickets[randomIndex];
 
-    if (slotMachineRef.current) {
-      slotMachineRef.current.spin(newNumbers);
+  const ticketNumber = winner.ticket.replace(/^\D+/, "");
+  const paddedTicket = ticketNumber.padStart(digitCount, "0");
+  const newNumbers = paddedTicket.slice(-digitCount).split("");
+
+  if (slotMachineRef.current) {
+    slotMachineRef.current.spin(newNumbers);
+  }
+  }, [accountList, winners, playSpinSound, digitCount]);
+
+const handleSpinComplete = useCallback(
+  (result) => {
+    setSpinning(false);
+    stopSpinSound();
+    const winner = Object.entries(accountList)
+      .flatMap(([username, tickets]) =>
+        tickets.map((ticket) => ({ username, ticket }))
+      )
+      .find((ticket) => {
+        const numericPart = ticket.ticket.replace(/^\D+/, "");
+        return numericPart.padStart(digitCount, "0").endsWith(result);
+      });
+
+    if (winner) {
+      winner.prize = currentPrize;
+      setWinners((prev) => [...prev, winner]);
+      setCurrentWinner(winner);
+      setIsModalOpen(true);
+      playWinSound();
+
+      // 从 accountList 中移除已抽中的 ticket
+      setAccountList((prevList) => {
+        const newList = { ...prevList };
+        const userTickets = newList[winner.username];
+        const index = userTickets.indexOf(winner.ticket);
+        if (index > -1) {
+          userTickets.splice(index, 1);
+          if (userTickets.length === 0) {
+            delete newList[winner.username];
+          }
+        }
+        return newList;
+      });
     }
-  }, [accountList, winners, playSpinSound]);
-
-  const handleSpinComplete = useCallback(
-    (result) => {
-      setSpinning(false);
-      stopSpinSound();
-      const winner = Object.entries(accountList)
-        .flatMap(([username, tickets]) =>
-          tickets.map((ticket) => ({ username, ticket }))
-        )
-        .find((ticket) => ticket.ticket.endsWith(result));
-
-      if (winner) {
-        setWinners((prev) => [...prev, winner]);
-        setCurrentWinner(winner);
-        setIsModalOpen(true);
-        playWinSound();
-      }
-    },
-    [accountList, playWinSound, stopSpinSound]
-  );
+  },
+  [accountList, playWinSound, stopSpinSound, currentPrize, digitCount]
+);
 
   const handleFileUpload = useCallback((newAccountList) => {
     setAccountList(newAccountList);
     setWinners([]);
     alert("Account list uploaded successfully");
   }, []);
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    stopWinSound();
+  };
 
   return (
     <div className="flex flex-col justify-start items-center min-h-screen bg-[#0a52a0] p-4 md:p-8 font-[-apple-system,BlinkMacSystemFont,Helvetica_Neue,Arial,PingFang_SC,Microsoft_YaHei,sans-serif] relative">
@@ -292,7 +381,11 @@ const App = () => {
             <h1 className="text-3xl md:text-4xl font-bold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-b from-[#ecdc91] via-[#fff4c1] to-[#ffb600]">
               Lucky Draw Machine
             </h1>
-            <SlotMachine ref={slotMachineRef} onComplete={handleSpinComplete} />
+            <SlotMachine
+              ref={slotMachineRef}
+              onComplete={handleSpinComplete}
+              digitCount={digitCount}
+            />
             <Button
               onClick={handleSpin}
               className="w-full mb-4 bg-gradient-to-b from-[#ecdc91] via-[#fff4c1] to-[#ffb600] hover:opacity-90 text-[#0a52a0] font-bold py-3 md:py-4 text-xl md:text-2xl rounded-full shadow-lg transform hover:scale-105 transition-all"
@@ -300,7 +393,11 @@ const App = () => {
             >
               {spinning ? "Drawing..." : "Start Draw"}
             </Button>
-            <FileUpload onFileUpload={handleFileUpload} />
+            <FileUpload
+              onFileUpload={handleFileUpload}
+              onPrizeChange={setCurrentPrize}
+              onDigitCountChange={setDigitCount}
+            />
             <WinnersList winners={winners} />
           </CardContent>
         </Card>
@@ -310,7 +407,7 @@ const App = () => {
           </CardContent>
         </Card>
       </div>
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
         <h2 className="text-3xl font-bold mb-6 text-center text-[#ecdc91]">
           Congratulations!
         </h2>
@@ -324,8 +421,14 @@ const App = () => {
           <p className="text-[#fff4c1] text-xl mb-2">
             <span className="font-semibold">Ticket Number:</span>
           </p>
-          <p className="text-[#ecdc91] text-3xl font-bold">
+          <p className="text-[#ecdc91] text-3xl font-bold mb-4">
             {currentWinner?.ticket}
+          </p>
+          <p className="text-[#fff4c1] text-xl mb-2">
+            <span className="font-semibold">Prize:</span>
+          </p>
+          <p className="text-[#ecdc91] text-3xl font-bold">
+            {currentWinner?.prize}
           </p>
         </div>
       </Modal>
