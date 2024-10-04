@@ -40,8 +40,10 @@ const Modal = ({ isOpen, onClose, children }) => {
 };
 
 const Reel = ({ spinning, stopSymbol }) => {
-  const symbols = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-  const [position, setPosition] = useState(
+  const symbols = React.useMemo(
+    () => ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+    []
+  );  const [position, setPosition] = useState(
     Math.floor(Math.random() * symbols.length)
   );
 
@@ -104,36 +106,47 @@ const FileUpload = ({ onFileUpload, onPrizeChange, onDigitCountChange }) => {
     onPrizeChange(event.target.value);
   };
 
- const handleFileChange = (event) => {
-   const file = event.target.files[0];
-   if (file) {
-     const reader = new FileReader();
-     reader.onload = (e) => {
-       const content = e.target.result;
-       const lines = content.split("\n").slice(1);
-       const accountList = lines.reduce((acc, line) => {
-         const [username, ticket] = line.trim().split(",");
-         if (!acc[username]) {
-           acc[username] = [];
-         }
-         acc[username].push(ticket);
-         return acc;
-       }, {});
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target.result;
+        const lines = content
+          .split("\n")
+          .slice(1)
+          .filter((line) => line.trim() !== "");
+        const accountList = lines.reduce((acc, line) => {
+          const [username, ticket] = line.trim().split(",");
+          if (username && ticket) {
+            if (!acc[username]) {
+              acc[username] = [];
+            }
+            acc[username].push(ticket);
+          }
+          return acc;
+        }, {});
 
-       // 确定最大位数
-       const maxTicket = lines.reduce((max, line) => {
-         const ticket = line.trim().split(",")[1];
-         const numericPart = ticket.replace(/^\D+/, "");
-         return numericPart.length > max.length ? numericPart : max;
-       }, "");
-       const digits = maxTicket.length;
-       onDigitCountChange(digits);
+        // 确定最大位数
+        const maxTicket = lines.reduce((max, line) => {
+          const parts = line.trim().split(",");
+          if (parts.length < 2) return max;
+          const ticket = parts[1];
+          const match = ticket.match(/[1-9]\d*/);
+          if (match) {
+            const numericPart = match[0];
+            return numericPart.length > max.length ? numericPart : max;
+          }
+          return max;
+        }, "");
+        const digits = maxTicket.length;
+        onDigitCountChange(digits);
 
-       onFileUpload(accountList);
-     };
-     reader.readAsText(file);
-   }
- };
+        onFileUpload(accountList);
+      };
+      reader.readAsText(file);
+    }
+  };
 
   return (
     <div className="mb-4">
