@@ -1,19 +1,19 @@
 {
   "files": {
     "main.css": "/lottery-lawin/static/css/main.c3feb8bc.css",
-    "main.js": "/lottery-lawin/static/js/main.c4fcb870.js",
+    "main.js": "/lottery-lawin/static/js/main.3972b459.js",
     "static/js/885.83aee760.chunk.js": "/lottery-lawin/static/js/885.83aee760.chunk.js",
     "static/js/453.bbf4adc7.chunk.js": "/lottery-lawin/static/js/453.bbf4adc7.chunk.js",
     "static/media/spin.wav": "/lottery-lawin/static/media/spin.5f0c8d85d4f9155cd6b6.wav",
     "static/media/win.mp3": "/lottery-lawin/static/media/win.1a4aa36e26105c19f7fc.mp3",
     "index.html": "/lottery-lawin/index.html",
     "main.c3feb8bc.css.map": "/lottery-lawin/static/css/main.c3feb8bc.css.map",
-    "main.c4fcb870.js.map": "/lottery-lawin/static/js/main.c4fcb870.js.map",
+    "main.3972b459.js.map": "/lottery-lawin/static/js/main.3972b459.js.map",
     "885.83aee760.chunk.js.map": "/lottery-lawin/static/js/885.83aee760.chunk.js.map",
     "453.bbf4adc7.chunk.js.map": "/lottery-lawin/static/js/453.bbf4adc7.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.c3feb8bc.css",
-    "static/js/main.c4fcb870.js"
+    "static/js/main.3972b459.js"
   ]
 }
