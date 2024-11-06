@@ -9,7 +9,7 @@ import { useTheme } from "./themes";
 import spinSound from "./sounds/spin.wav";
 import winSound from "./sounds/win.mp3";
 
-const Modal = ({ isOpen, onClose, children, theme }) => {
+const Modal = ({ isOpen, onClose, children, theme, themeName }) => {
   const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
@@ -26,12 +26,14 @@ const Modal = ({ isOpen, onClose, children, theme }) => {
     <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
       {showConfetti && <Confetti gravity={0.4} initialVelocityY={100} />}
       <Card
+        themeName={themeName}
         className={`w-[90%] max-w-[500px] shadow-2xl rounded-3xl border-4 ${theme.card.background} ${theme.card.border}`}
       >
-        <CardContent className="p-6">
+        <CardContent className="p-6" themeName={themeName}>
           {children}
           <Button
             onClick={onClose}
+            themeName={themeName}
             className={`mt-6 w-full hover:opacity-90 font-bold py-2 px-4 rounded-full text-lg ${theme.button.primary}`}
           >
             Close
@@ -139,6 +141,7 @@ const FileUpload = ({
   onPrizeChange,
   onDigitCountChange,
   theme,
+  themeName,
 }) => {
   const fileInputRef = useRef(null);
   const [prize, setPrize] = useState("");
@@ -210,6 +213,7 @@ const FileUpload = ({
         className="hidden"
       />
       <Button
+        themeName={themeName}
         onClick={() => fileInputRef.current.click()}
         className={`w-full py-2 px-4 rounded mb-4 hover:opacity-90 font-bold ${theme.button.secondary}`}
       >
@@ -226,66 +230,70 @@ const FancyTable = ({
   totalTickets,
   handleDownload,
   theme,
-}) => (
-  <div
-    className={`mb-4 rounded-lg shadow overflow-hidden ${theme.card.background}`}
-  >
-    <h3
-      className={`font-bold text-2xl p-4 sticky top-0 z-10 justify-between items-center flex ${theme.text.primary} ${theme.secondary}`}
+  themeName,
+}) => {
+  return (
+    <div
+      className={`mb-4 rounded-lg shadow overflow-hidden ${theme.card.background}`}
     >
-      {title}
-      <span className={`font-bold text-2xl ${theme.text.primary}`}>
-        {totalTickets !== undefined && `Total Tickets: ${totalTickets}`}
-        {handleDownload !== undefined && (
-          <Button
-            onClick={handleDownload}
-            className={`ml-4 ${theme.button.secondary}`}
-          >
-            Download
-          </Button>
-        )}
-      </span>
-    </h3>
-
-    <div className="overflow-y-auto max-h-[calc(100vh-300px)]">
-      <table className="w-full">
-        <thead className="sticky top-0 z-10">
-          <tr className={theme.table.header}>
-            {columns.map((column, index) => (
-              <th
-                key={index}
-                className={`px-4 py-2 text-left ${theme.text.primary}`}
-              >
-                {column}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row, index) => (
-            <tr
-              key={index}
-              className={
-                index % 2 === 0 ? theme.table.rowEven : theme.table.rowOdd
-              }
+      <h3
+        className={`font-bold text-2xl p-4 sticky top-0 z-10 justify-between items-center flex ${theme.text.primary} ${theme.secondary}`}
+      >
+        {title}
+        <span className={`font-bold text-2xl ${theme.text.primary}`}>
+          {totalTickets !== undefined && `Total Tickets: ${totalTickets}`}
+          {handleDownload !== undefined && (
+            <Button
+              onClick={handleDownload}
+              className={`ml-4 ${theme.button.secondary}`}
+              themeName={themeName}
             >
-              {columns.map((column, colIndex) => (
-                <td
-                  key={colIndex}
-                  className={`px-4 py-2 border-t ${theme.text.accent} ${theme.border}`}
+              Download
+            </Button>
+          )}
+        </span>
+      </h3>
+
+      <div className="overflow-y-auto max-h-[calc(100vh-300px)]">
+        <table className="w-full">
+          <thead className="sticky top-0 z-10">
+            <tr className={theme.table.header}>
+              {columns.map((column, index) => (
+                <th
+                  key={index}
+                  className={`px-4 py-2 text-left ${theme.text.primary}`}
                 >
-                  {row[column.toLowerCase()]}
-                </td>
+                  {column}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.map((row, index) => (
+              <tr
+                key={index}
+                className={
+                  index % 2 === 0 ? theme.table.rowEven : theme.table.rowOdd
+                }
+              >
+                {columns.map((column, colIndex) => (
+                  <td
+                    key={colIndex}
+                    className={`px-4 py-2 border-t ${theme.text.accent} ${theme.border}`}
+                  >
+                    {row[column.toLowerCase()]}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
-const AccountList = ({ accounts, theme }) => {
+const AccountList = ({ accounts, theme, themeName }) => {
   const data = Object.entries(accounts).flatMap(([username, tickets]) =>
     tickets.map((ticket) => ({ username, ticket }))
   );
@@ -299,11 +307,12 @@ const AccountList = ({ accounts, theme }) => {
       title="Account List"
       totalTickets={totalTickets}
       theme={theme}
+      themeName={themeName}
     />
   );
 };
 
-const WinnersList = ({ winners, theme }) => {
+const WinnersList = ({ winners, theme, themeName }) => {
   const handleDownload = () => {
     const csvContent =
       "data:text/csv;charset=utf-8," +
@@ -325,6 +334,7 @@ const WinnersList = ({ winners, theme }) => {
       title="Winners List"
       theme={theme}
       handleDownload={handleDownload}
+      themeName={themeName}
     />
   );
 };
@@ -448,9 +458,10 @@ const App = ({ themeName = "blue" }) => {
       />
       <div className="flex flex-col lg:flex-row space-y-8 lg:space-y-0 lg:space-x-8 relative z-10 w-full max-w-7xl">
         <Card
+          themeName={themeName}
           className={`flex-1 shadow-2xl rounded-3xl border-4 ${theme.card.background} ${theme.card.border}`}
         >
-          <CardContent className="p-4 md:p-6">
+          <CardContent className="p-4 md:p-6" themeName={themeName}>
             <h1
               className={`text-3xl md:text-4xl font-bold text-center mb-6 ${theme.text.primary}`}
             >
@@ -466,6 +477,7 @@ const App = ({ themeName = "blue" }) => {
               onClick={handleSpin}
               className={`w-full mb-4 font-bold py-3 md:py-4 text-xl md:text-2xl rounded-full shadow-lg transform hover:scale-105 transition-all ${theme.button.primary}`}
               disabled={spinning}
+              themeName={themeName}
             >
               {spinning ? "Drawing..." : "Start Draw"}
             </Button>
@@ -474,19 +486,34 @@ const App = ({ themeName = "blue" }) => {
               onPrizeChange={setCurrentPrize}
               onDigitCountChange={setDigitCount}
               theme={theme}
+              themeName={themeName}
             />
-            <WinnersList winners={winners} theme={theme} />
+            <WinnersList
+              winners={winners}
+              theme={theme}
+              themeName={themeName}
+            />
           </CardContent>
         </Card>
         <Card
+          themeName={themeName}
           className={`lg:w-[500px] shadow-xl rounded-3xl border-4 ${theme.card.background} ${theme.card.border}`}
         >
-          <CardContent className="p-4 md:p-6">
-            <AccountList accounts={accountList} theme={theme} />
+          <CardContent themeName={themeName} className="p-4 md:p-6">
+            <AccountList
+              accounts={accountList}
+              theme={theme}
+              themeName={themeName}
+            />
           </CardContent>
         </Card>
       </div>
-      <Modal isOpen={isModalOpen} onClose={handleCloseModal} theme={theme}>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        theme={theme}
+        themeName={themeName}
+      >
         <h2
           className={`text-3xl font-bold mb-6 text-center ${theme.text.primary}`}
         >
