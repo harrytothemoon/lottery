@@ -129,6 +129,77 @@ export const themes = {
         disabled:opacity-50`,
     },
   },
+  christmas: {
+    // 使用更柔和的紅綠配色
+    primary: "bg-gradient-to-b from-[#2F5233] via-[#235347] to-[#1C3F4C]", // 漸變森林綠
+    secondary: "bg-[#B12E40]", // 優雅紅色
+    accent: "text-[#E8C547]", // 溫暖金色
+    border: "border-[#E8C547]", // 溫暖金色邊框
+    text: {
+      primary: "text-[#E8C547]", // 溫暖金色
+      secondary: "text-[#F4EBD9]", // 米白色
+      accent: "text-[#E8C547]", // 改為金色，原本是紅色
+    },
+    button: {
+      variants: {
+        default:
+          "bg-gradient-to-r from-[#B12E40] to-[#943A3A] text-[#F4EBD9] hover:opacity-90 shadow-md shadow-red-900/20 transition-all duration-300",
+        destructive: "bg-[#943A3A] text-[#F4EBD9] hover:bg-[#7A2E2E]",
+        outline:
+          "border-2 border-[#E8C547] bg-[#2F5233] text-[#E8C547] hover:bg-[#235347] transition-all duration-300",
+        secondary:
+          "bg-[#235347] text-[#E8C547] hover:bg-[#1C3F4C] transition-all duration-300",
+        ghost:
+          "hover:bg-[#B12E40]/10 hover:text-[#B12E40] transition-all duration-300",
+        link: "text-[#E8C547] underline-offset-4 hover:underline hover:text-[#B12E40] transition-all duration-300",
+        primary:
+          "bg-gradient-to-r from-[#E8C547] via-[#F4EBD9] to-[#E8C547] text-[#2F5233] font-semibold shadow-md shadow-yellow-900/20 hover:shadow-lg hover:shadow-yellow-900/30 transition-all duration-300 bg-[length:200%_100%] animate-shimmer",
+      },
+    },
+    card: {
+      base: "rounded-lg border-2 border-[#E8C547] bg-gradient-to-b from-[#2F5233] via-[#235347] to-[#1C3F4C] text-[#F4EBD9] shadow-xl shadow-green-900/10",
+      header:
+        "flex flex-col space-y-1.5 p-6 bg-gradient-to-r from-transparent via-[#E8C547]/5 to-transparent",
+      title:
+        "text-2xl font-bold leading-none tracking-tight text-[#E8C547] [text-shadow:_0_1px_3px_rgb(0_0_0_/_40%)]",
+      description: "text-sm text-[#F4EBD9]/90",
+      content: "p-6 pt-0",
+      footer: "flex items-center p-6 pt-0 border-t border-[#E8C547]/20",
+      background: "bg-gradient-to-b from-[#2F5233] via-[#235347] to-[#1C3F4C]",
+      border: "border-[#E8C547]",
+    },
+    table: {
+      header: "bg-[#1C3F4C]",
+      rowEven: "bg-[#2F5233]",
+      rowOdd: "bg-[#235347]",
+    },
+    input: {
+      background: "bg-[#2F5233]",
+      text: "text-[#F4EBD9]",
+      border: "border-[#E8C547]",
+      base: `flex h-10 w-full rounded-md border-2
+        border-[#E8C547] 
+        bg-[#2F5233] 
+        px-3 py-2 
+        text-sm 
+        text-[#F4EBD9] 
+        ring-offset-[#2F5233]
+        file:border-0 
+        file:bg-transparent 
+        file:text-sm 
+        file:font-medium 
+        placeholder:text-[#F4EBD9]/50
+        focus-visible:outline-none 
+        focus-visible:ring-2 
+        focus-visible:ring-[#E8C547] 
+        focus-visible:ring-offset-2 
+        disabled:cursor-not-allowed 
+        disabled:opacity-50
+        shadow-md shadow-green-900/10
+        transition-all duration-300
+        hover:shadow-lg hover:border-[#E8C547]`,
+    },
+  },
 };
 
 export const useTheme = (themeName) => {
