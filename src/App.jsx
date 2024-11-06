@@ -1,14 +1,15 @@
+// App.jsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent } from "./components/ui/card";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import useSound from "use-sound";
 import Confetti from "react-confetti";
+import { useTheme } from "./themes";
 import spinSound from "./sounds/spin.wav";
 import winSound from "./sounds/win.mp3";
 
-// 新增 Modal 组件
-const Modal = ({ isOpen, onClose, children }) => {
+const Modal = ({ isOpen, onClose, children, theme }) => {
   const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
@@ -22,14 +23,16 @@ const Modal = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
       {showConfetti && <Confetti gravity={0.4} initialVelocityY={100} />}
-      <Card className="w-[90%] max-w-[500px] bg-[#0a52a0] shadow-2xl rounded-3xl border-4 border-[#ecdc91]">
+      <Card
+        className={`w-[90%] max-w-[500px] shadow-2xl rounded-3xl border-4 ${theme.card.background} ${theme.card.border}`}
+      >
         <CardContent className="p-6">
           {children}
           <Button
             onClick={onClose}
-            className="mt-6 w-full bg-gradient-to-r from-[#ecdc91] to-[#ffb600] hover:opacity-90 text-[#0a52a0] font-bold py-2 px-4 rounded-full text-lg"
+            className={`mt-6 w-full hover:opacity-90 font-bold py-2 px-4 rounded-full text-lg ${theme.button.primary}`}
           >
             Close
           </Button>
@@ -39,7 +42,7 @@ const Modal = ({ isOpen, onClose, children }) => {
   );
 };
 
-const Reel = ({ spinning, stopSymbol, shouldReveal }) => {
+const Reel = ({ spinning, stopSymbol, shouldReveal, theme }) => {
   const symbols = React.useMemo(
     () => ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
     []
@@ -53,7 +56,7 @@ const Reel = ({ spinning, stopSymbol, shouldReveal }) => {
     if (spinning && !shouldReveal) {
       interval = setInterval(() => {
         setPosition(Math.floor(Math.random() * symbols.length));
-      }, 50); // 將間隔時間從 100ms 減少到 50ms，使動畫更快
+      }, 50);
     } else if (shouldReveal) {
       clearInterval(interval);
       setPosition(symbols.indexOf(stopSymbol));
@@ -63,69 +66,80 @@ const Reel = ({ spinning, stopSymbol, shouldReveal }) => {
 
   return (
     <div
-      className={`reel overflow-hidden h-24 w-16 bg-[#0a52a0] border-2 border-[#ecdc91] flex items-center justify-center text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-[#ecdc91] via-[#fff4c1] to-[#ffb600]`}
+      className={`reel overflow-hidden h-24 w-16 border-2 flex items-center justify-center text-5xl font-bold ${theme.card.background} ${theme.border} ${theme.accent}`}
     >
       {symbols[position]}
     </div>
   );
 };
 
+const SlotMachine = React.forwardRef(
+  ({ onComplete, digitCount, theme }, ref) => {
+    const [spinning, setSpinning] = useState(false);
+    const [stopSymbols, setStopSymbols] = useState(
+      Array(digitCount).fill(null)
+    );
+    const [revealedCount, setRevealedCount] = useState(0);
 
-const SlotMachine = React.forwardRef(({ onComplete, digitCount }, ref) => {
-  const [spinning, setSpinning] = useState(false);
-  const [stopSymbols, setStopSymbols] = useState(Array(digitCount).fill(null));
-  const [revealedCount, setRevealedCount] = useState(0);
+    const spin = useCallback(
+      (result) => {
+        setSpinning(true);
+        setStopSymbols(Array(digitCount).fill(null));
+        setRevealedCount(0);
 
-  const spin = useCallback(
-    (result) => {
-      setSpinning(true);
-      setStopSymbols(Array(digitCount).fill(null));
-      setRevealedCount(0);
+        const revealNextDigit = (index) => {
+          if (index < digitCount) {
+            setTimeout(
+              () => {
+                setStopSymbols((prev) => {
+                  const newSymbols = [...prev];
+                  newSymbols[index] = result[index];
+                  return newSymbols;
+                });
+                setRevealedCount(index + 1);
+                revealNextDigit(index + 1);
+              },
+              index === digitCount - 1 ? 3000 : 1500
+            );
+          } else {
+            setSpinning(false);
+            onComplete(result.join(""));
+          }
+        };
 
-      const revealNextDigit = (index) => {
-        if (index < digitCount) {
-          setTimeout(
-            () => {
-              setStopSymbols((prev) => {
-                const newSymbols = [...prev];
-                newSymbols[index] = result[index];
-                return newSymbols;
-              });
-              setRevealedCount(index + 1);
-              revealNextDigit(index + 1);
-            },
-            index === digitCount - 1 ? 3000 : 1500
-          );
-        } else {
-          setSpinning(false);
-          onComplete(result.join(""));
-        }
-      };
+        revealNextDigit(0);
+      },
+      [onComplete, digitCount]
+    );
 
-      revealNextDigit(0);
-    },
-    [onComplete, digitCount]
-  );
+    React.useImperativeHandle(ref, () => ({
+      spin,
+    }));
 
-  React.useImperativeHandle(ref, () => ({
-    spin,
-  }));
+    return (
+      <div
+        className={`flex justify-center space-x-2 mb-4 p-6 rounded-lg shadow-inner border-4 ${theme.card.background} ${theme.card.border}`}
+      >
+        {stopSymbols.map((symbol, index) => (
+          <Reel
+            key={index}
+            spinning={spinning}
+            stopSymbol={symbol}
+            shouldReveal={index < revealedCount}
+            theme={theme}
+          />
+        ))}
+      </div>
+    );
+  }
+);
 
-  return (
-    <div className="flex justify-center space-x-2 mb-4 bg-[#0a52a0] p-6 rounded-lg shadow-inner border-4 border-[#ecdc91]">
-      {stopSymbols.map((symbol, index) => (
-        <Reel
-          key={index}
-          spinning={spinning}
-          stopSymbol={symbol}
-          shouldReveal={index < revealedCount}
-        />
-      ))}
-    </div>
-  );
-});
-
-const FileUpload = ({ onFileUpload, onPrizeChange, onDigitCountChange }) => {
+const FileUpload = ({
+  onFileUpload,
+  onPrizeChange,
+  onDigitCountChange,
+  theme,
+}) => {
   const fileInputRef = useRef(null);
   const [prize, setPrize] = useState("");
 
@@ -155,7 +169,6 @@ const FileUpload = ({ onFileUpload, onPrizeChange, onDigitCountChange }) => {
           return acc;
         }, {});
 
-        // 确定最大位数
         const maxTicket = lines.reduce((max, line) => {
           const parts = line.trim().split(",");
           if (parts.length < 2) return max;
@@ -178,15 +191,15 @@ const FileUpload = ({ onFileUpload, onPrizeChange, onDigitCountChange }) => {
 
   return (
     <div className="mb-4">
-      <label className="block text-[#ecdc91] mb-2">Enter Prize:</label>
+      <label className={`block mb-2 ${theme.text.primary}`}>Enter Prize:</label>
       <Input
         type="text"
         value={prize}
         onChange={handlePrizeChange}
         placeholder="Enter the prize for this draw"
-        className="w-full bg-[#0a52a0] text-[#ecdc91] border-[#ecdc91]"
+        className={`w-full ${theme.input.background} ${theme.input.text} ${theme.input.border}`}
       />
-      <label className="block text-[#ecdc91] mb-2 mt-2">
+      <label className={`block mb-2 mt-2 ${theme.text.primary}`}>
         Upload Account List (CSV):
       </label>
       <input
@@ -198,27 +211,35 @@ const FileUpload = ({ onFileUpload, onPrizeChange, onDigitCountChange }) => {
       />
       <Button
         onClick={() => fileInputRef.current.click()}
-        className="w-full bg-gradient-to-r from-[#ecdc91] to-[#ffb600] hover:opacity-90 text-[#0a52a0] font-bold py-2 px-4 rounded mb-4"
+        className={`w-full py-2 px-4 rounded mb-4 hover:opacity-90 font-bold ${theme.button.secondary}`}
       >
         Choose File
       </Button>
-      {/* <p className="mt-2 text-[#ecdc91] text-sm mb-4">
-        {fileInputRef.current?.files[0]?.name || "No file chosen"}
-      </p> */}
     </div>
   );
 };
 
-const FancyTable = ({ data, columns, title, totalTickets, handleDownload }) => (
-  <div className="mb-4 bg-[#0a52a0] rounded-lg shadow overflow-hidden">
-    <h3 className="font-bold text-2xl text-[#ecdc91] p-4 bg-[#094682] sticky top-0 z-10  justify-between items-center flex">
+const FancyTable = ({
+  data,
+  columns,
+  title,
+  totalTickets,
+  handleDownload,
+  theme,
+}) => (
+  <div
+    className={`mb-4 rounded-lg shadow overflow-hidden ${theme.card.background}`}
+  >
+    <h3
+      className={`font-bold text-2xl p-4 sticky top-0 z-10 justify-between items-center flex ${theme.text.primary} ${theme.secondary}`}
+    >
       {title}
-      <span className="font-bold text-2xl text-[#ecdc91]">
+      <span className={`font-bold text-2xl ${theme.text.primary}`}>
         {totalTickets !== undefined && `Total Tickets: ${totalTickets}`}
         {handleDownload !== undefined && (
           <Button
             onClick={handleDownload}
-            className="bg-gradient-to-r from-[#ecdc91] to-[#ffb600] hover:opacity-90 text-[#0a52a0] font-bold py-2 px-2 rounded"
+            className={`ml-4 ${theme.button.secondary}`}
           >
             Download
           </Button>
@@ -229,9 +250,12 @@ const FancyTable = ({ data, columns, title, totalTickets, handleDownload }) => (
     <div className="overflow-y-auto max-h-[calc(100vh-300px)]">
       <table className="w-full">
         <thead className="sticky top-0 z-10">
-          <tr className="bg-[#0d3d6e]">
+          <tr className={theme.table.header}>
             {columns.map((column, index) => (
-              <th key={index} className="px-4 py-2 text-left text-[#fff4c1]">
+              <th
+                key={index}
+                className={`px-4 py-2 text-left ${theme.text.primary}`}
+              >
                 {column}
               </th>
             ))}
@@ -241,12 +265,14 @@ const FancyTable = ({ data, columns, title, totalTickets, handleDownload }) => (
           {data.map((row, index) => (
             <tr
               key={index}
-              className={index % 2 === 0 ? "bg-[#0a4a91]" : "bg-[#0a52a0]"}
+              className={
+                index % 2 === 0 ? theme.table.rowEven : theme.table.rowOdd
+              }
             >
               {columns.map((column, colIndex) => (
                 <td
                   key={colIndex}
-                  className="px-4 py-2 text-[#ecdc91] border-t border-[#094682]"
+                  className={`px-4 py-2 border-t ${theme.text.accent} ${theme.border}`}
                 >
                   {row[column.toLowerCase()]}
                 </td>
@@ -259,7 +285,7 @@ const FancyTable = ({ data, columns, title, totalTickets, handleDownload }) => (
   </div>
 );
 
-const AccountList = ({ accounts }) => {
+const AccountList = ({ accounts, theme }) => {
   const data = Object.entries(accounts).flatMap(([username, tickets]) =>
     tickets.map((ticket) => ({ username, ticket }))
   );
@@ -272,11 +298,12 @@ const AccountList = ({ accounts }) => {
       columns={["Username", "Ticket"]}
       title="Account List"
       totalTickets={totalTickets}
+      theme={theme}
     />
   );
 };
 
-const WinnersList = ({ winners }) => {
+const WinnersList = ({ winners, theme }) => {
   const handleDownload = () => {
     const csvContent =
       "data:text/csv;charset=utf-8," +
@@ -292,18 +319,18 @@ const WinnersList = ({ winners }) => {
   };
 
   return (
-    <div>
-      <FancyTable
-        data={winners}
-        columns={["Username", "Ticket", "Prize"]}
-        title="Winners List"
-        handleDownload={handleDownload}
-      />
-    </div>
+    <FancyTable
+      data={winners}
+      columns={["Username", "Ticket", "Prize"]}
+      title="Winners List"
+      theme={theme}
+      handleDownload={handleDownload}
+    />
   );
 };
 
-const App = () => {
+const App = ({ themeName = "blue" }) => {
+  const theme = useTheme(themeName);
   const [accountList, setAccountList] = useState({});
   const [winners, setWinners] = useState([]);
   const [spinning, setSpinning] = useState(false);
@@ -340,16 +367,16 @@ const App = () => {
     setSpinning(true);
     playSpinSound();
 
-  const randomIndex = Math.floor(Math.random() * remainingTickets.length);
-  const winner = remainingTickets[randomIndex];
+    const randomIndex = Math.floor(Math.random() * remainingTickets.length);
+    const winner = remainingTickets[randomIndex];
 
-  const ticketNumber = winner.ticket.replace(/^\D+/, "");
-  const paddedTicket = ticketNumber.padStart(digitCount, "0");
-  const newNumbers = paddedTicket.slice(-digitCount).split("");
+    const ticketNumber = winner.ticket.replace(/^\D+/, "");
+    const paddedTicket = ticketNumber.padStart(digitCount, "0");
+    const newNumbers = paddedTicket.slice(-digitCount).split("");
 
-  if (slotMachineRef.current) {
-    slotMachineRef.current.spin(newNumbers);
-  }
+    if (slotMachineRef.current) {
+      slotMachineRef.current.spin(newNumbers);
+    }
   }, [accountList, winners, playSpinSound, digitCount]);
 
   const handleSpinComplete = useCallback(
@@ -370,13 +397,11 @@ const App = () => {
         setWinners((prev) => [...prev, winner]);
         setCurrentWinner(winner);
 
-        // 延遲 x 秒後顯示彈窗
         setTimeout(() => {
           setIsModalOpen(true);
           playWinSound();
         }, 300);
 
-        // 從 accountList 中移除已抽中的 ticket
         setAccountList((prevList) => {
           const newList = { ...prevList };
           const userTickets = newList[winner.username];
@@ -406,8 +431,9 @@ const App = () => {
   };
 
   return (
-    <div className="flex flex-col justify-start items-center min-h-screen bg-[#0a52a0] p-4 md:p-8 font-[-apple-system,BlinkMacSystemFont,Helvetica_Neue,Arial,PingFang_SC,Microsoft_YaHei,sans-serif] relative">
-      {/* Background watermark */}
+    <div
+      className={`flex flex-col justify-start items-center min-h-screen p-4 md:p-8 font-[-apple-system,BlinkMacSystemFont,Helvetica_Neue,Arial,PingFang_SC,Microsoft_YaHei,sans-serif] relative ${theme.primary}`}
+    >
       <div
         className="absolute inset-0 bg-center bg-no-repeat bg-contain opacity-10"
         style={{
@@ -417,23 +443,28 @@ const App = () => {
 
       <img
         src={`${process.env.PUBLIC_URL}/logo.jpeg`}
-        alt="Law in Play Logo"
+        alt="Logo"
         className="mb-6 w-48 md:w-64 relative z-10"
       />
       <div className="flex flex-col lg:flex-row space-y-8 lg:space-y-0 lg:space-x-8 relative z-10 w-full max-w-7xl">
-        <Card className="flex-1 bg-[#0a52a0] shadow-2xl rounded-3xl border-4 border-[#ecdc91]">
+        <Card
+          className={`flex-1 shadow-2xl rounded-3xl border-4 ${theme.card.background} ${theme.card.border}`}
+        >
           <CardContent className="p-4 md:p-6">
-            <h1 className="text-3xl md:text-4xl font-bold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-b from-[#ecdc91] via-[#fff4c1] to-[#ffb600]">
+            <h1
+              className={`text-3xl md:text-4xl font-bold text-center mb-6 ${theme.text.primary}`}
+            >
               Lucky Draw Machine
             </h1>
             <SlotMachine
               ref={slotMachineRef}
               onComplete={handleSpinComplete}
               digitCount={digitCount}
+              theme={theme}
             />
             <Button
               onClick={handleSpin}
-              className="w-full mb-4 bg-gradient-to-b from-[#ecdc91] via-[#fff4c1] to-[#ffb600] hover:opacity-90 text-[#0a52a0] font-bold py-3 md:py-4 text-xl md:text-2xl rounded-full shadow-lg transform hover:scale-105 transition-all"
+              className={`w-full mb-4 font-bold py-3 md:py-4 text-xl md:text-2xl rounded-full shadow-lg transform hover:scale-105 transition-all ${theme.button.primary}`}
               disabled={spinning}
             >
               {spinning ? "Drawing..." : "Start Draw"}
@@ -442,37 +473,42 @@ const App = () => {
               onFileUpload={handleFileUpload}
               onPrizeChange={setCurrentPrize}
               onDigitCountChange={setDigitCount}
+              theme={theme}
             />
-            <WinnersList winners={winners} />
+            <WinnersList winners={winners} theme={theme} />
           </CardContent>
         </Card>
-        <Card className="lg:w-[500px] bg-[#0a52a0] shadow-xl rounded-3xl border-4 border-[#ecdc91]">
+        <Card
+          className={`lg:w-[500px] shadow-xl rounded-3xl border-4 ${theme.card.background} ${theme.card.border}`}
+        >
           <CardContent className="p-4 md:p-6">
-            <AccountList accounts={accountList} />
+            <AccountList accounts={accountList} theme={theme} />
           </CardContent>
         </Card>
       </div>
-      <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
-        <h2 className="text-3xl font-bold mb-6 text-center text-[#ecdc91]">
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal} theme={theme}>
+        <h2
+          className={`text-3xl font-bold mb-6 text-center ${theme.text.primary}`}
+        >
           Congratulations!
         </h2>
-        <div className="bg-[#094682] p-4 rounded-lg mb-4">
-          <p className="text-[#fff4c1] text-xl mb-2">
+        <div className={`p-4 rounded-lg mb-4 ${theme.secondary}`}>
+          <p className={`text-xl mb-2 ${theme.text.secondary}`}>
             <span className="font-semibold">Winner:</span>
           </p>
-          <p className="text-[#ecdc91] text-3xl font-bold mb-4">
+          <p className={`text-3xl font-bold mb-4 ${theme.text.primary}`}>
             {currentWinner?.username}
           </p>
-          <p className="text-[#fff4c1] text-xl mb-2">
+          <p className={`text-xl mb-2 ${theme.text.secondary}`}>
             <span className="font-semibold">Ticket Number:</span>
           </p>
-          <p className="text-[#ecdc91] text-3xl font-bold mb-4">
+          <p className={`text-3xl font-bold mb-4 ${theme.text.primary}`}>
             {currentWinner?.ticket}
           </p>
-          <p className="text-[#fff4c1] text-xl mb-2">
+          <p className={`text-xl mb-2 ${theme.text.secondary}`}>
             <span className="font-semibold">Prize:</span>
           </p>
-          <p className="text-[#ecdc91] text-3xl font-bold">
+          <p className={`text-3xl font-bold ${theme.text.primary}`}>
             {currentWinner?.prize}
           </p>
         </div>
