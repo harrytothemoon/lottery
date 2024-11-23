@@ -1,5 +1,5 @@
 {
-  "name": "lottery-lawin",
+  "name": "lottery",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -13,6 +13,7 @@
     "react": "^18.3.1",
     "react-confetti": "^6.1.0",
     "react-dom": "^18.3.1",
+    "react-router-dom": "^7.0.1",
     "react-scripts": "5.0.1",
     "slot-machine-gen": "^1.3.5",
     "tailwind-merge": "^2.5.2",
@@ -20,7 +21,7 @@
     "use-sound": "^4.0.3",
     "web-vitals": "^2.1.4"
   },
-  "homepage": "https://harrytothemoon.github.io/lottery-lawin",
+  "homepage": "https://harrytothemoon.github.io/lottery",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
