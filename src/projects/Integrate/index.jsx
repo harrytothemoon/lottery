@@ -4,11 +4,7 @@ import useFavicon from "../../hooks/index";
 const Lodibet = () => {
   useFavicon();
   return (
-    <LotteryBall
-      defaultTheme="dark"
-      backgroundImageUrl={`url("${process.env.PUBLIC_URL}/lodibet/background.jpeg")`}
-      LogoUrl={`${process.env.PUBLIC_URL}/lodibet/logo.jpeg`}
-    />
+    <LotteryBall />
   );
 };
 
