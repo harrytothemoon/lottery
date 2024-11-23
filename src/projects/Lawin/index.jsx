@@ -1,5 +1,5 @@
-import LuckyDraw from "../LuckyDraw";
-import useFavicon from "../hooks/index";
+import LuckyDraw from "../../LuckyDraw";
+import useFavicon from "../../hooks/index";
 
 const Lodibet = () => {
   useFavicon();
