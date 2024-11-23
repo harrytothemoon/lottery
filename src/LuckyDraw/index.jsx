@@ -11,6 +11,13 @@ import winSound from "../sounds/win.mp3";
 import winSoundChristmas from "../sounds/christmas-win.mp3";
 import ChristmasEffects from "../components/christmasEffects";
 
+const maskUsername = (username) => {
+  if (!username || username.length <= 3) return username;
+  return `${username.slice(0, 2)}${"*".repeat(
+    username.length - 3
+  )}${username.slice(-1)}`;
+};
+
 const Modal = ({ isOpen, onClose, children, theme, themeName }) => {
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -283,7 +290,9 @@ const FancyTable = ({
                     key={colIndex}
                     className={`px-4 py-2 border-t ${theme.text.accent} ${theme.border}`}
                   >
-                    {row[column.toLowerCase()]}
+                    {column.toLowerCase() === "username"
+                      ? maskUsername(row[column.toLowerCase()])
+                      : row[column.toLowerCase()]}
                   </td>
                 ))}
               </tr>
@@ -319,7 +328,9 @@ const WinnersList = ({ winners, theme, themeName }) => {
     const csvContent =
       "data:text/csv;charset=utf-8," +
       "Username,Ticket,Prize\n" +
-      winners.map((w) => `${w.username},${w.ticket},${w.prize}`).join("\n");
+      winners
+        .map((w) => `${maskUsername(w.username)},${w.ticket},${w.prize}`)
+        .join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -541,7 +552,7 @@ const LuckyDraw = ({ backgroundImageUrl, LogoUrl, defaultTheme }) => {
               <span className="font-semibold">Winner:</span>
             </p>
             <p className={`text-3xl font-bold mb-4 ${theme.text.primary}`}>
-              {currentWinner?.username}
+              {currentWinner ? maskUsername(currentWinner.username) : ""}
             </p>
             <p className={`text-xl mb-2 ${theme.text.secondary}`}>
               <span className="font-semibold">Ticket Number:</span>
