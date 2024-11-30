@@ -31,17 +31,39 @@ const maskUsername = (username) => {
 };
 
 const CompanyLogos = () => (
-  <div className="flex flex-wrap justify-center items-center gap-8 mb-8">
+  <div className="flex justify-center items-center gap-8 mb-6 w-full px-8">
     <img
-      src={`${process.env.PUBLIC_URL}/lawin/logo.jpeg`}
+      src={`${process.env.PUBLIC_URL}/integrate/lawinLogo.png`}
       alt="Lawin"
-      className="h-16 object-contain"
+      width="30%"
+      className="h-24 object-contain"
     />
     <img
-      src={`${process.env.PUBLIC_URL}/lodibet/logo.jpeg`}
-      alt="Lodibet"
-      className="h-16 object-contain"
+      src={`${process.env.PUBLIC_URL}/integrate/hawkplayLogo.png`}
+      alt="hawkplay"
+      width="40%"
+      style={{transform:"scale(1.2)"}}
+      className="h-24 object-contain"
     />
+    <img
+      src={`${process.env.PUBLIC_URL}/integrate/LODILogo.png`}
+      alt="Lodibet"
+      width="30%"
+      className="h-24 object-contain"
+    />
+  </div>
+);
+
+const BackgroundLogos = ({ logos }) => (
+  <div className="flex flex-col items-center gap-12 mt-12 w-full">
+    {logos.map((src) => (
+      <img
+        src={`${process.env.PUBLIC_URL}/${src}`}
+        width="100%"
+        alt="1"
+        className=""
+      />
+    ))}
   </div>
 );
 
@@ -487,65 +509,82 @@ const LottoDraw = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-950 via-indigo-900 to-purple-900">
-      <div className="container mx-auto p-8 max-w-7xl relative">
+    <div
+      className="min-h-screen bg-gradient-to-b from-blue-950 via-indigo-900 bg-cover"
+      style={{
+        backgroundImage: `url("${process.env.PUBLIC_URL}/integrate/background.png")`,
+      }}
+    >
+      <div className="container mx-auto p-4 max-w-screen-2xl relative">
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute top-0 left-1/4 w-72 h-72 bg-yellow-500/10 rounded-full blur-3xl" />
           <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
           <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
         </div>
         <CompanyLogos />
-        <div className="grid gap-6 relative">
-          <Card className="overflow-hidden bg-white/10 backdrop-blur-sm border-white/20">
-            <CardContent className="p-8">
-              <LotteryMachine
-                ref={lotteryMachineRef}
-                onComplete={checkWinners}
-              />
-              <div className="flex justify-center">
-                <Button
-                  onClick={handleSpin}
-                  disabled={isSpinning}
-                  className="w-64 h-12 text-lg font-semibold border-2 border-yellow-400/50 
+        <div className="grid grid-cols-[20%_minmax(600px,_60%)_20%] gap-4">
+          <BackgroundLogos
+            logos={[
+              "integrate/left1.png",
+              "integrate/left1.png",
+              "integrate/left1.png",
+            ]}
+          />
+          <div className="grid gap-6 relative">
+            <Card className="overflow-hidden bg-white/10 backdrop-blur-sm border-white/20">
+              <CardContent className="p-8">
+                <LotteryMachine
+                  ref={lotteryMachineRef}
+                  onComplete={checkWinners}
+                />
+                <div className="flex justify-center">
+                  <Button
+                    onClick={handleSpin}
+                    disabled={isSpinning}
+                    className="w-64 h-12 text-lg font-semibold border-2 border-yellow-400/50 
                 bg-transparent hover:bg-yellow-400/10 transition-all duration-300
                 backdrop-blur-sm text-yellow-400 hover:text-yellow-300 hover:shadow-[0_0_20px_rgba(250,204,21,0.4)]"
-                  variant="outline"
-                >
-                  {isSpinning ? (
-                    <span className="flex items-center gap-2">
-                      <span className="animate-spin">🎲</span> Drawing...
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      🎲 Start Draw
-                    </span>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                    variant="outline"
+                  >
+                    {isSpinning ? (
+                      <span className="flex items-center gap-2">
+                        <span className="animate-spin">🎲</span> Drawing...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        🎲 Start Draw
+                      </span>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <FileUpload
-                onFileUpload={onFileUpload}
-                className="bg-white/10 backdrop-blur-sm border-white/20"
-              />
-              <PrizeSettings
-                onPrizeChange={setPrizes}
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <FileUpload
+                  onFileUpload={onFileUpload}
+                  className="bg-white/10 backdrop-blur-sm border-white/20"
+                />
+                <PrizeSettings
+                  onPrizeChange={setPrizes}
+                  className="bg-white/10 backdrop-blur-sm border-white/20"
+                />
+              </div>
+              <ResultsDisplay
+                winners={winners}
+                prizes={prizes}
                 className="bg-white/10 backdrop-blur-sm border-white/20"
               />
             </div>
-            <ResultsDisplay
-              winners={winners}
-              prizes={prizes}
+
+            <ParticipantsList
+              participants={accountList}
               className="bg-white/10 backdrop-blur-sm border-white/20"
             />
           </div>
-
-          <ParticipantsList
-            participants={accountList}
-            className="bg-white/10 backdrop-blur-sm border-white/20"
+          <BackgroundLogos
+            logos={["integrate/right1.png", "integrate/right1.png"]}
           />
         </div>
       </div>
