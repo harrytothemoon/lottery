@@ -1,6 +1,5 @@
 import React, {
   useState,
-  useEffect,
   useCallback,
   useRef,
   useMemo,
@@ -8,7 +7,6 @@ import React, {
 } from "react";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
 import {
   Table,
   TableBody,
@@ -17,10 +15,11 @@ import {
   TableHeader,
   TableRow,
 } from "../components/ui/table";
-import { Trophy, Users, Download, Upload } from "lucide-react";
+import { Trophy, Users } from "lucide-react";
 import { AlertDialog, AlertDialogContent } from "../components/ui/alert-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import CelebrationEffect from "./CelebratationEffect";
+import SettingsModal from "./SettingsModal";
 
 const BALL_COUNTS = 47;
 const DRAW_DURATION_SECONDS = 2;
@@ -37,21 +36,20 @@ const PRIZE_LABELS = {
   6: {
     label: "Jackpot",
     icon: "👑",
-    className: "text-2xl font-bold text-yellow-300",
+    className: "text-4xl font-bold text-yellow-300",
   },
   5: {
     label: "First Prize",
     icon: "🏆",
-    className: "text-xl font-bold text-yellow-300",
+    className: "text-3xl font-bold text-yellow-300",
   },
   4: {
     label: "Second Prize",
     icon: "🥈",
-    className: "text-xl font-bold text-yellow-300",
+    className: "text-2xl font-bold text-yellow-300",
   },
 };
 
-// 獲獎者列表組件
 const WinnersList = React.memo(({ winners, matchCount, onClose }) => {
   return (
     <AlertDialog open={true} onOpenChange={onClose}>
@@ -382,106 +380,52 @@ const LotteryMachine = React.memo(
   })
 );
 
-const PrizeSettings = React.memo(({ onPrizeChange }) => {
-  const [prizes, setPrizes] = useState(DEFAULT_PRIZES);
-
-  useEffect(() => {
-    onPrizeChange(prizes);
-  }, [onPrizeChange, prizes]);
-
-  const handlePrizeChange = useCallback(
-    (count, value) => {
-      setPrizes((prev) => {
-        const newPrizes = { ...prev, [count]: value };
-        onPrizeChange(newPrizes);
-        return newPrizes;
-      });
-    },
-    [onPrizeChange]
-  );
-
-  return (
-    <Card className="mb-6 bg-transparent">
-      <CardContent className="p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Trophy className="w-6 h-6 text-yellow-300" />
-          <h3 className="text-2xl font-bold text-yellow-300">Prize Settings</h3>
-        </div>
-        <div className="grid grid-cols-1 gap-4">
-          {WINNING_CATEGORIES.map((count) => (
-            <div
-              key={count}
-              className="flex items-center space-x-4 bg-red-900/60 p-4 rounded-lg"
-            >
-              <label className="w-fit font-medium flex items-center gap-3">
-                <span className="text-2xl">{PRIZE_LABELS[count].icon}</span>
-                <span className={PRIZE_LABELS[count].className}>
-                  {PRIZE_LABELS[count].label}:
-                </span>
-              </label>
-              <Input
-                type="text"
-                value={prizes[count]}
-                onChange={(e) => handlePrizeChange(count, e.target.value)}
-                placeholder={`Enter prize for ${PRIZE_LABELS[count].label}`}
-                className="flex-1 bg-red-800/60 border-yellow-400/50 text-yellow-300 text-xl placeholder:text-yellow-300/50 font-bold text-end border-none"
-              />
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-});
-
 const ParticipantsList = React.memo(({ participants = {} }) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const debouncedSearch = useRef(null);
+  // const [searchTerm, setSearchTerm] = useState("");
+  // const debouncedSearch = useRef(null);
 
-  // 使用 useMemo 優化篩選邏輯
   const filteredParticipants = React.useMemo(() => {
-    const searchLower = searchTerm.toLowerCase();
-    return Object.entries(participants)
-      .flatMap(([username, tickets]) =>
-        tickets.map((ticket) => ({
-          username,
-          numbers: ticket.join(", "),
-        }))
-      )
-      .filter(
-        (item) =>
-          item.username.toLowerCase().includes(searchLower) ||
-          item.numbers.includes(searchTerm)
-      );
-  }, [participants, searchTerm]);
+    // const searchLower = searchTerm.toLowerCase();
+    return Object.entries(participants).flatMap(([username, tickets]) =>
+      tickets.map((ticket) => ({
+        username,
+        numbers: ticket.join(", "),
+      }))
+    );
+    // .filter(
+    //   (item) =>
+    //     item.username.toLowerCase().includes(searchLower) ||
+    //     item.numbers.includes(searchTerm)
+    // );
+  }, [participants]);
 
   // 優化搜索處理函數
-  const handleSearch = useCallback((e) => {
-    if (debouncedSearch.current) {
-      clearTimeout(debouncedSearch.current);
-    }
-    debouncedSearch.current = setTimeout(() => {
-      setSearchTerm(e.target.value);
-    }, 300);
-  }, []);
+  // const handleSearch = useCallback((e) => {
+  //   if (debouncedSearch.current) {
+  //     clearTimeout(debouncedSearch.current);
+  //   }
+  //   debouncedSearch.current = setTimeout(() => {
+  //     setSearchTerm(e.target.value);
+  //   }, 300);
+  // }, []);
 
   // 優化下載處理函數
-  const handleDownload = useCallback(() => {
-    const csv = [
-      ["Username", "Numbers"],
-      ...filteredParticipants.map((p) => [p.username, p.numbers]),
-    ]
-      .map((row) => row.join(","))
-      .join("\n");
+  // const handleDownload = useCallback(() => {
+  //   const csv = [
+  //     ["Username", "Numbers"],
+  //     ...filteredParticipants.map((p) => [p.username, p.numbers]),
+  //   ]
+  //     .map((row) => row.join(","))
+  //     .join("\n");
 
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "participants_list.csv";
-    a.click();
-    window.URL.revokeObjectURL(url);
-  }, [filteredParticipants]);
+  //   const blob = new Blob([csv], { type: "text/csv" });
+  //   const url = window.URL.createObjectURL(blob);
+  //   const a = document.createElement("a");
+  //   a.href = url;
+  //   a.download = "participants_list.csv";
+  //   a.click();
+  //   window.URL.revokeObjectURL(url);
+  // }, [filteredParticipants]);
 
   // 優化表格渲染
   const TableContent = React.useMemo(
@@ -489,8 +433,10 @@ const ParticipantsList = React.memo(({ participants = {} }) => {
       <Table>
         <TableHeader className="sticky top-0 bg-background z-10">
           <TableRow>
-            <TableHead className="w-[200px] text-lg">Username</TableHead>
-            <TableHead className="text-lg">Numbers</TableHead>
+            <TableHead className="w-[200px] text-lg font-bold">
+              Username
+            </TableHead>
+            <TableHead className="text-lg font-bold">Numbers</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -520,17 +466,19 @@ const ParticipantsList = React.memo(({ participants = {} }) => {
   );
 
   return (
-    <Card className="mb-6 bg-transparent">
+    <Card className="flex-1 bg-transparent">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-white-500" />
-            <h3 className="text-lg font-semibold">Participants List</h3>
-            <span className="text-sm text-muted-foreground">
+            <Users className="w-10 h-10 text-white-300" />
+            <h3 className="text-[40px] font-bold text-yellow-300">
+              Participants List
+            </h3>
+            {/* <span className="text-sm text-muted-foreground">
               ({filteredParticipants.length} tickets)
-            </span>
+            </span> */}
           </div>
-          <div className="flex items-center gap-4">
+          {/* <div className="flex items-center gap-4">
             <Input
               type="search"
               placeholder="Search..."
@@ -546,10 +494,10 @@ const ParticipantsList = React.memo(({ participants = {} }) => {
               <Download className="w-4 h-4" />
               Export
             </Button>
-          </div>
+          </div> */}
         </div>
         <div className="rounded-lg border">
-          <div className="max-h-[400px] overflow-auto">{TableContent}</div>
+          <div className="max-h-[500px] overflow-auto">{TableContent}</div>
         </div>
       </CardContent>
     </Card>
@@ -588,46 +536,88 @@ const ResultsDisplay = React.memo(({ winners, prizes, onShowCoinRain }) => {
     onShowCoinRain(false);
   }, [onShowCoinRain]);
 
+  const PrizeAmountDisplay = ({ amount }) => (
+    <motion.div
+      className="text-5xl font-semibold mt-1"
+      animate={{
+        opacity: [1, 0.7, 1],
+        textShadow: [
+          "0 0 10px rgba(250,204,21,0.5)",
+          "0 0 20px rgba(250,204,21,0.8)",
+          "0 0 10px rgba(250,204,21,0.5)",
+        ],
+      }}
+      transition={{
+        duration: 2,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+    >
+      {amount}
+    </motion.div>
+  );
+
+  const JackpotTrophy = () => (
+    <motion.div
+      className="text-5xl"
+      animate={{
+        rotate: [0, 10, -10, 0],
+        scale: [1, 2.5, 1],
+      }}
+      transition={{
+        duration: 3,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+    >
+      {PRIZE_LABELS[6].icon}
+    </motion.div>
+  );
+
   return (
-    <Card className="bg-transparent">
-      <CardContent className="p-6">
+    <Card className="bg-transparent flex-1">
+      <CardContent className="p-6 overflow-visible	">
         <div className="flex items-center gap-2 mb-4">
-          <Trophy className="w-6 h-6 text-yellow-300" />
-          <h3 className="text-2xl font-bold text-yellow-300">
+          <Trophy className="w-10 h-10 text-yellow-300" />
+          <h3 className="text-[40px] font-bold text-yellow-300">
             Results Summary
           </h3>
         </div>
         <div className="grid gap-4">
           {WINNING_CATEGORIES.map((count) => (
-            <div
+            <motion.div
               key={count}
-              className={`p-6 rounded-lg border flex justify-between items-center
+              className={`p-4 rounded-lg border flex justify-between items-center relative overflow-hidden
                 ${
                   count === 6
                     ? "bg-gradient-to-r from-red-900/80 to-red-800/80 border-yellow-400 shadow-lg shadow-yellow-500/20"
                     : "bg-red-900/60 backdrop-blur-sm"
                 }`}
             >
-              <div className="flex flex-col items-center gap-2 w-full">
+              <div className="flex flex-col items-center gap-2 w-full relative">
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-4">
-                    <span className="text-3xl">{PRIZE_LABELS[count].icon}</span>
-                    <div>
-                      <span className={PRIZE_LABELS[count].className}>
-                        {PRIZE_LABELS[count].label}
-                      </span>
-                      <div className="text-3xl font-semibold text-yellow-300 mt-1">
-                        {prizes[count] || DEFAULT_PRIZES[count]}
+                    {count === 6 ? (
+                      <JackpotTrophy />
+                    ) : (
+                      <div className="text-5xl h-full">
+                        {PRIZE_LABELS[count].icon}
                       </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className={PRIZE_LABELS[count].className}>
+                      {PRIZE_LABELS[count].label}
                     </div>
+                    <PrizeAmountDisplay
+                      amount={prizes[count] || DEFAULT_PRIZES[count]}
+                    />
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3">
-                      <Users className="w-5 h-5 text-yellow-300" />
-                      <span className="text-4xl font-bold text-yellow-300">
-                        {winCounts[count]}
-                      </span>
-                    </div>
+                    <Users className="w-5 h-5 text-white-100" />
+                    <span className="text-4xl font-bold text-white-100">
+                      {winCounts[count]}
+                    </span>
                   </div>
                 </div>
                 {winCounts[count] > 0 && (
@@ -643,7 +633,7 @@ const ResultsDisplay = React.memo(({ winners, prizes, onShowCoinRain }) => {
                   </>
                 )}
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
@@ -661,97 +651,7 @@ const ResultsDisplay = React.memo(({ winners, prizes, onShowCoinRain }) => {
   );
 });
 
-const FileUpload = React.memo(({ onFileUpload }) => {
-  const fileInputRef = useRef(null);
-  const [selectedFile, setSelectedFile] = useState(null);
-
-  const handleFileChange = useCallback(
-    (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        setSelectedFile(file);
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const content = e.target.result;
-            const lines = content
-              .split("\n")
-              .slice(1)
-              .filter((line) => line.trim());
-            const accounts = {};
-
-            lines.forEach((line) => {
-              const [username, ticket] = line.trim().split(",");
-              if (username && ticket) {
-                const numbers = ticket
-                  .replace("Lodi", "")
-                  .split(".")
-                  .map(Number);
-                if (!accounts[username]) {
-                  accounts[username] = [];
-                }
-                accounts[username].push(numbers);
-              }
-            });
-
-            onFileUpload(accounts);
-          } catch (error) {
-            console.error("Error processing file:", error);
-            alert("Error processing file. Please check the file format.");
-          }
-        };
-        reader.readAsText(file);
-      }
-    },
-    [onFileUpload]
-  );
-
-  const CustomFileInput = React.useMemo(
-    () => (
-      <div className="mt-2">
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept=".csv"
-          className="hidden"
-        />
-        <Button
-          variant="outline"
-          onClick={() => fileInputRef.current?.click()}
-          className="w-full bg-transparent hover:bg-transparent hover:bg-yellow-400/10 transition-all duration-300 hover:text-yellow-300 hover:shadow-[0_0_20px_rgba(250,204,21,0.4)]"
-        >
-          <Upload className="w-4 h-4 mr-2" />
-          {selectedFile ? selectedFile.name : "Select Participants File"}
-        </Button>
-        {selectedFile && (
-          <p className="text-sm text-muted-foreground mt-1">
-            Selected file: {selectedFile.name}
-          </p>
-        )}
-        {!selectedFile && (
-          <p className="text-sm text-muted-foreground mt-1">No file selected</p>
-        )}
-      </div>
-    ),
-    [selectedFile, handleFileChange]
-  );
-
-  return (
-    <Card className="mb-6 bg-transparent">
-      <CardContent className="p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Upload className="w-5 h-5 text-white-500" />
-          <h3 className="text-lg font-semibold">Upload Data</h3>
-        </div>
-        <div className="space-y-4">{CustomFileInput}</div>
-      </CardContent>
-    </Card>
-  );
-});
-
 const LottoDraw = () => {
-  // 使用 useReducer 來管理複雜的狀態邏輯
   const [state, dispatch] = useReducer(reducer, {
     accountList: {},
     winners: [],
@@ -811,7 +711,7 @@ const LottoDraw = () => {
   // 使用 useMemo 優化主要內容區域
   const mainContent = useMemo(
     () => (
-      <div className="grid gap-6 relative">
+      <div className="flex flex-col gap-6 relative">
         <Card className="overflow-hidden bg-white/10 backdrop-blur-sm border-white/20">
           <CardContent className="p-4">
             <LotteryMachine ref={lotteryMachineRef} onComplete={checkWinners} />
@@ -819,9 +719,9 @@ const LottoDraw = () => {
               <Button
                 onClick={handleDrawNext}
                 disabled={lotteryMachineRef.current?.isDrawing}
-                className="w-100 h-16 text-2xl font-semibold border-2 border-yellow-400/50 
-              bg-transparent hover:bg-yellow-400/10 transition-all duration-300
-              backdrop-blur-sm text-yellow-400 hover:text-yellow-300 hover:shadow-[0_0_20px_rgba(250,204,21,0.4)]"
+                className="w-100 h-24 text-[66px] font-semibold border-2 border-yellow-400/50 
+                bg-transparent hover:bg-yellow-400/10 transition-all duration-300
+                backdrop-blur-sm text-yellow-400 hover:text-yellow-300 hover:shadow-[0_0_20px_rgba(250,204,21,0.4)]"
                 variant="outline"
               >
                 {lotteryMachineRef.current?.isDrawing ? (
@@ -829,49 +729,32 @@ const LottoDraw = () => {
                     <span className="animate-spin">🎲</span> Drawing...
                   </span>
                 ) : lotteryMachineRef.current?.currentIndex === 6 ? (
-                  <span className="flex items-center gap-2">
-                    🎯 Draw Complete
-                  </span>
+                  <span className="flex items-center gap-2">🎯 Complete</span>
                 ) : (
-                  <span className="flex items-center gap-2">
-                    🎲 Draw Number
-                  </span>
+                  <span className="flex items-center gap-2">🎲 Draw</span>
                 )}
               </Button>
             </div>
           </CardContent>
         </Card>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          <div>
-            <PrizeSettings
-              onPrizeChange={setPrizes}
-              className="bg-white/10 backdrop-blur-sm border-white/20"
-            />
-            <FileUpload
-              onFileUpload={onFileUpload}
-              className="bg-white/10 backdrop-blur-sm border-white/20"
-            />
-          </div>
+        <div className="flex gap-6">
           <ResultsDisplay
             winners={state.winners}
             prizes={state.prizes}
             onShowCoinRain={handleShowCoinRain}
             className="bg-white/10 backdrop-blur-sm border-white/20"
           />
-        </div>
 
-        <ParticipantsList
-          participants={state.accountList}
-          className="bg-white/10 backdrop-blur-sm border-white/20"
-        />
+          <ParticipantsList
+            participants={state.accountList}
+            className="bg-white/10 backdrop-blur-sm border-white/20"
+          />
+        </div>
       </div>
     ),
     [
       handleDrawNext,
       checkWinners,
-      onFileUpload,
-      setPrizes,
       state.winners,
       state.prizes,
       state.accountList,
@@ -887,6 +770,8 @@ const LottoDraw = () => {
       }}
     >
       <CelebrationEffect show={showCoinRain} />
+      <SettingsModal onFileUpload={onFileUpload} onPrizeChange={setPrizes} />
+
       <div className="container mx-auto p-4 max-w-full relative">
         <CompanyLogos />
         <div className="grid grid-cols-[20%_minmax(600px,_60%)_20%] gap-4">

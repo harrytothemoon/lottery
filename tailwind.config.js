@@ -27,11 +27,24 @@ module.exports = {
           "0%": { backgroundPosition: "200% 0" },
           "100%": { backgroundPosition: "-200% 0" },
         },
+        "gradient-x": {
+          "0%, 100%": {
+            "background-size": "200% 200%",
+            "background-position": "left center",
+          },
+          "50%": {
+            "background-size": "200% 200%",
+            "background-position": "right center",
+          },
+        },
       },
       animation: {
         snowfall: "snowfall linear infinite",
         glow: "glow 2s ease-in-out infinite",
         shimmer: "shimmer 3s linear infinite",
+        "gradient-x": "gradient-x 15s ease infinite",
+        "pulse-slow": "pulse 3s linear infinite",
+        "spin-slow": "spin 8s linear infinite",
       },
     },
   },
