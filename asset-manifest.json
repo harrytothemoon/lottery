@@ -1,19 +1,19 @@
 {
   "files": {
-    "main.css": "/lottery/static/css/main.5bad5192.css",
-    "main.js": "/lottery/static/js/main.6d2cd76a.js",
+    "main.css": "/lottery/static/css/main.fd142ba4.css",
+    "main.js": "/lottery/static/js/main.102781d6.js",
     "static/js/885.f2243d04.chunk.js": "/lottery/static/js/885.f2243d04.chunk.js",
     "static/media/game-music.mp3": "/lottery/static/media/game-music.b9d14351ed0239e7afcb.mp3",
     "static/media/spin.wav": "/lottery/static/media/spin.5f0c8d85d4f9155cd6b6.wav",
     "static/media/christmas-win.mp3": "/lottery/static/media/christmas-win.502edb2eb7ecb6aed2a2.mp3",
     "static/media/win.mp3": "/lottery/static/media/win.1a4aa36e26105c19f7fc.mp3",
     "index.html": "/lottery/index.html",
-    "main.5bad5192.css.map": "/lottery/static/css/main.5bad5192.css.map",
-    "main.6d2cd76a.js.map": "/lottery/static/js/main.6d2cd76a.js.map",
+    "main.fd142ba4.css.map": "/lottery/static/css/main.fd142ba4.css.map",
+    "main.102781d6.js.map": "/lottery/static/js/main.102781d6.js.map",
     "885.f2243d04.chunk.js.map": "/lottery/static/js/885.f2243d04.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.5bad5192.css",
-    "static/js/main.6d2cd76a.js"
+    "static/css/main.fd142ba4.css",
+    "static/js/main.102781d6.js"
   ]
 }
