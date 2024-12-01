@@ -18,14 +18,14 @@ import {
   TableRow,
 } from "../components/ui/table";
 import { Trophy, Users, Download, Upload } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogContent,
-} from "../components/ui/alert-dialog";
+import { AlertDialog, AlertDialogContent } from "../components/ui/alert-dialog";
 import { motion, AnimatePresence } from "framer-motion";
-import CelebrationEffect from './CelebratationEffect'
+import CelebrationEffect from "./CelebratationEffect";
 
-const LOTTO_NUMBERS = Array.from({ length: 47 }, (_, i) => i + 1);
+const BALL_COUNTS = 47;
+const DRAW_DURATION_SECONDS = 2;
+
+const LOTTO_NUMBERS = Array.from({ length: BALL_COUNTS }, (_, i) => i + 1);
 
 const WINNING_CATEGORIES = [6, 5, 4];
 const DEFAULT_PRIZES = {
@@ -161,37 +161,22 @@ const BackgroundLogos = React.memo(({ logos }) => (
   </div>
 ));
 
-const Ball = React.memo(({ number, isSpinning, finalNumber, shouldReveal }) => {
-  const [currentNumber, setCurrentNumber] = useState("00");
-
-  useEffect(() => {
-    let interval;
-    if (isSpinning && !shouldReveal) {
-      interval = setInterval(() => {
-        setCurrentNumber(Math.floor(Math.random() * 47) + 1);
-      }, 50);
-    } else if (shouldReveal && finalNumber) {
-      setCurrentNumber(finalNumber);
-    }
-    return () => clearInterval(interval);
-  }, [isSpinning, finalNumber, shouldReveal]);
-
+const Ball = React.memo(({ number, shouldReveal }) => {
   return (
     <div className="relative">
       <div
         className={`
-        w-24 h-24 rounded-full
-        flex items-center justify-center
-        text-4xl font-bold
-        bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500
-        text-white
-        shadow-lg
-        transform transition-all duration-200
-        ${isSpinning && !shouldReveal ? "animate-bounce" : ""}
-        border-4 border-yellow-300
-      `}
+          w-24 h-24 rounded-full
+          flex items-center justify-center
+          text-4xl font-bold
+          bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500
+          text-white
+          shadow-lg
+          transform transition-all duration-200
+          border-4 border-yellow-300
+        `}
       >
-        {String(currentNumber).padStart(2, "0")}
+        {shouldReveal ? String(number).padStart(2, "0") : "00"}
       </div>
     </div>
   );
@@ -205,26 +190,19 @@ const LotteryMachine = React.memo(
       currentIndex: 0,
       isDrawing: false,
     });
+    const [showAnimation, setShowAnimation] = useState(false);
+    const [nextNumber, setNextNumber] = useState(null);
+    const [showFinalBall, setShowFinalBall] = useState(false);
+    const [isBallRevealed, setIsBallRevealed] = useState(false);
 
-    const drawNextNumber = useCallback(() => {
-      if (state.currentIndex >= 6) return;
-
-      setState((prev) => ({
-        ...prev,
-        isSpinning: true,
-        isDrawing: true,
-      }));
-
-      const remainingNumbers = LOTTO_NUMBERS.filter(
-        (num) => !state.numbers.slice(0, state.currentIndex).includes(num)
-      );
-      const nextNumber =
-        remainingNumbers[Math.floor(Math.random() * remainingNumbers.length)];
-
-      setTimeout(() => {
+    const handleAnimationComplete = useCallback(
+      (number) => {
+        setShowAnimation(false);
+        setShowFinalBall(false);
+        setIsBallRevealed(false);
         setState((prev) => {
           const newNumbers = [...prev.numbers];
-          newNumbers[prev.currentIndex] = nextNumber;
+          newNumbers[prev.currentIndex] = number;
 
           const newState = {
             ...prev,
@@ -240,8 +218,33 @@ const LotteryMachine = React.memo(
 
           return newState;
         });
-      }, 2000);
-    }, [state.currentIndex, state.numbers, onComplete]);
+      },
+      [onComplete]
+    );
+
+    const drawNextNumber = useCallback(() => {
+      if (state.currentIndex >= 6) return;
+
+      setState((prev) => ({
+        ...prev,
+        isSpinning: true,
+        isDrawing: true,
+      }));
+
+      const remainingNumbers = LOTTO_NUMBERS.filter(
+        (num) => !state.numbers.slice(0, state.currentIndex).includes(num)
+      );
+      const number =
+        remainingNumbers[Math.floor(Math.random() * remainingNumbers.length)];
+
+      setNextNumber(number);
+      setShowAnimation(true);
+
+      // 2秒後顯示中獎球
+      setTimeout(() => {
+        setShowFinalBall(true);
+      }, DRAW_DURATION_SECONDS * 1000);
+    }, [state.currentIndex, state.numbers]);
 
     React.useImperativeHandle(ref, () => ({
       drawNextNumber,
@@ -249,21 +252,132 @@ const LotteryMachine = React.memo(
       currentIndex: state.currentIndex,
     }));
 
+    const getRandomPosition = () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+    });
+
     return (
-      <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-green-500/20 to-transparent -z-10 rounded-3xl" />
-        <div className="flex justify-center space-x-4 mb-4 p-8 rounded-3xl border-2 border-green-200/30 backdrop-blur-sm">
-          {state.numbers.map((number, index) => (
-            <Ball
-              key={index}
-              number={number}
-              isSpinning={state.isSpinning && index === state.currentIndex}
-              finalNumber={number}
-              shouldReveal={index < state.currentIndex}
-            />
-          ))}
+      <>
+        <AlertDialog open={showAnimation} onOpenChange={setShowAnimation}>
+          <AlertDialogContent className="fixed flex items-center justify-center bg-transparent border-none shadow-none max-w-none w-screen h-screen p-0 m-0">
+            <div className="fixed inset-0 flex items-center justify-center overflow-hidden">
+              {/* Random floating balls */}
+              {Array.from({ length: BALL_COUNTS }).map((_, i) => {
+                const initialPos = getRandomPosition();
+                const finalPos = getRandomPosition();
+
+                return (
+                  <motion.div
+                    key={i}
+                    className="absolute inset-0 w-fit h-fit"
+                    initial={initialPos}
+                    animate={
+                      showFinalBall
+                        ? {
+                            filter: "blur(3px)",
+                          }
+                        : {
+                            x: [initialPos.x, finalPos.x],
+                            y: [initialPos.y, finalPos.y],
+                            transition: {
+                              duration: DRAW_DURATION_SECONDS,
+                              ease: "linear",
+                            },
+                          }
+                    }
+                  >
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500 flex items-center justify-center text-2xl font-bold text-white shadow-lg">
+                      {i + 1}
+                    </div>
+                  </motion.div>
+                );
+              })}
+
+              {/* Center ball */}
+              {showFinalBall && (
+                <motion.div
+                  className="absolute"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", damping: 20 }}
+                >
+                  <motion.div
+                    className="w-64 h-64 rounded-full bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500 
+                             shadow-[0_0_50px_rgba(250,204,21,0.5)] flex items-center justify-center cursor-pointer"
+                    onClick={() => !isBallRevealed && setIsBallRevealed(true)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    animate={["initial"]}
+                    variants={{
+                      initial: {
+                        y: [-10, 10],
+                        transition: {
+                          duration: 2,
+                          repeat: Infinity,
+                          repeatType: "reverse",
+                        },
+                      },
+                    }}
+                  >
+                    <motion.div
+                      className="w-full h-full rounded-full flex items-center justify-center text-7xl font-bold text-white"
+                      initial={false}
+                      transition={{ duration: 0.6 }}
+                    >
+                      {isBallRevealed ? (
+                        <motion.span
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.3 }}
+                        >
+                          {String(nextNumber).padStart(2, "0")}
+                        </motion.span>
+                      ) : (
+                        "?"
+                      )}
+                    </motion.div>
+                  </motion.div>
+                  {!isBallRevealed && (
+                    <motion.div
+                      className="absolute top-full mt-8 text-center w-full text-yellow-300 text-2xl font-bold"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 }}
+                    >
+                      Click to reveal number
+                    </motion.div>
+                  )}
+                  {isBallRevealed && (
+                    <motion.button
+                      className="absolute top-full mt-8 px-6 py-3 bg-yellow-500/50 rounded-xl text-yellow-300 text-xl hover:bg-yellow-500/60 transition-colors w-full font-bold"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 }}
+                      onClick={() => handleAnimationComplete(nextNumber)}
+                    >
+                      Confirm
+                    </motion.button>
+                  )}
+                </motion.div>
+              )}
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-b from-green-500/20 to-transparent -z-10 rounded-3xl" />
+          <div className="flex justify-center space-x-4 mb-4 p-8 rounded-3xl border-2 border-green-200/30 backdrop-blur-sm">
+            {state.numbers.map((number, index) => (
+              <Ball
+                key={index}
+                number={number}
+                shouldReveal={index < state.currentIndex}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      </>
     );
   })
 );
