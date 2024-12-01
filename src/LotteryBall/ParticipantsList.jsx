@@ -50,8 +50,8 @@ const ParticipantsList = React.memo(({ participants = {} }) => {
             <h3 className="text-[40px] font-bold text-yellow-300">
               Participants List
             </h3>
-            <div className="text-xl text-muted-foreground">
-             Total {flattenedParticipants.length} tickets
+            <div className="text-xl text-muted-foreground font-bold">
+             Total: {new Intl.NumberFormat().format(flattenedParticipants.length)} tickets
             </div>
           </div>
         </div>

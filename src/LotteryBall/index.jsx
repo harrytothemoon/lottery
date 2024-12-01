@@ -1,3 +1,5 @@
+import AutoSizer from "react-virtualized-auto-sizer";
+import { FixedSizeList as List } from "react-window";
 import React, {
   useState,
   useCallback,
@@ -6,6 +8,7 @@ import React, {
   useReducer,
 } from "react";
 import { Card, CardContent } from "../components/ui/card";
+
 import { Button } from "../components/ui/button";
 import { Trophy, Users } from "lucide-react";
 import { AlertDialog, AlertDialogContent } from "../components/ui/alert-dialog";
@@ -45,10 +48,38 @@ const PRIZE_LABELS = {
 };
 
 const WinnersList = React.memo(({ winners, matchCount, onClose }) => {
+  const WINNER_ROW_HEIGHT = 100;
+  const filteredWinners = React.useMemo(
+    () => winners.filter((w) => w.matchCount === matchCount),
+    [winners, matchCount]
+  );
+
+  const WinnerRow = React.memo(({ index, style }) => {
+    const winner = filteredWinners[index];
+
+    return (
+      <motion.div
+        style={style}
+        initial={{ x: -50, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.1, delay: 0.1 }}
+      >
+        <div className="bg-yellow-500/10 p-4 rounded-lg border border-yellow-400/30 mx-4">
+          <div className="text-5xl font-bold text-yellow-300 text-center">
+            {maskUsername(winner.username)}
+          </div>
+          <div className="text-yellow-400/80 text-center">
+            Numbers: {winner.numbers.join(", ")}
+          </div>
+        </div>
+      </motion.div>
+    );
+  });
+
   return (
     <AlertDialog open={true} onOpenChange={onClose}>
       <AlertDialogContent
-        className="bg-black/90 border-2 border-yellow-400 max-w-2xl max-h-[80vh] overflow-y-auto fixed"
+        className="bg-black/90 border-2 border-yellow-400 max-w-2xl max-h-[80vh] overflow-hidden fixed"
         handleBackgroundClick={onClose}
       >
         <motion.div
@@ -77,31 +108,21 @@ const WinnersList = React.memo(({ winners, matchCount, onClose }) => {
             </motion.div>
           </div>
 
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 1 }}
-            className="space-y-4"
-          >
-            {winners
-              .filter((w) => w.matchCount === matchCount)
-              .map((winner, index) => (
-                <motion.div
-                  key={`${winner.username}-${index}`}
-                  initial={{ x: -50, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ duration: 0.3, delay: 1 + index * 0.1 }}
-                  className="bg-yellow-500/10 p-4 rounded-lg border border-yellow-400/30"
+          <div style={{ height: "50vh" }}>
+            <AutoSizer>
+              {({ height, width }) => (
+                <List
+                  height={height}
+                  itemCount={filteredWinners.length}
+                  itemSize={WINNER_ROW_HEIGHT}
+                  width={width}
+                  overscanCount={2}
                 >
-                  <div className="text-5xl font-bold text-yellow-300 text-center">
-                    {maskUsername(winner.username)}
-                  </div>
-                  <div className="text-yellow-400/80 text-center">
-                    Numbers: {winner.numbers.join(", ")}
-                  </div>
-                </motion.div>
-              ))}
-          </motion.div>
+                  {WinnerRow}
+                </List>
+              )}
+            </AutoSizer>
+          </div>
         </motion.div>
       </AlertDialogContent>
     </AlertDialog>
