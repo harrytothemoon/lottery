@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import CelebrationEffect from "./CelebratationEffect";
 import SettingsModal from "./SettingsModal";
 
+const WINNER_EFFECT_COUNT = 4
 const BALL_COUNTS = 47;
 const DRAW_DURATION_SECONDS = 2;
 
@@ -524,7 +525,7 @@ const ResultsDisplay = React.memo(({ winners, prizes, onShowCoinRain }) => {
   const handleShowWinners = useCallback(
     (category) => {
       setSelectedCategory(category);
-      if (category === 6) {
+      if (category >= WINNER_EFFECT_COUNT) {
         onShowCoinRain(true);
       }
     },
@@ -576,7 +577,7 @@ const ResultsDisplay = React.memo(({ winners, prizes, onShowCoinRain }) => {
 
   return (
     <Card className="bg-transparent flex-1">
-      <CardContent className="p-6 overflow-visible	">
+      <CardContent className="p-6">
         <div className="flex items-center gap-2 mb-4">
           <Trophy className="w-10 h-10 text-yellow-300" />
           <h3 className="text-[40px] font-bold text-yellow-300">
@@ -587,7 +588,7 @@ const ResultsDisplay = React.memo(({ winners, prizes, onShowCoinRain }) => {
           {WINNING_CATEGORIES.map((count) => (
             <motion.div
               key={count}
-              className={`p-4 rounded-lg border flex justify-between items-center relative overflow-hidden
+              className={`p-4 rounded-lg border flex justify-between items-center relative overflow-visible
                 ${
                   count === 6
                     ? "bg-gradient-to-r from-red-900/80 to-red-800/80 border-yellow-400 shadow-lg shadow-yellow-500/20"

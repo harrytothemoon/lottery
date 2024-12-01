@@ -181,7 +181,7 @@ const SettingsModal = ({ onFileUpload, onPrizeChange }) => {
         variant="outline"
         size="icon"
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 left-4 w-12 h-12 rounded-full bg-yellow-500/20 hover:bg-yellow-500/30 border-2 border-yellow-400/50"
+        className="fixed bottom-4 left-4 w-12 h-12 rounded-full bg-yellow-500/20 hover:bg-yellow-500/30 border-2 border-yellow-400/50 z-[20]"
       >
         <Settings className="w-6 h-6 text-yellow-300" />
       </Button>
