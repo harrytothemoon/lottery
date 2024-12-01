@@ -18,6 +18,12 @@ import {
   TableRow,
 } from "../components/ui/table";
 import { Trophy, Users, Download, Upload } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogContent,
+} from "../components/ui/alert-dialog";
+import { motion, AnimatePresence } from "framer-motion";
+import CelebrationEffect from './CelebratationEffect'
 
 const LOTTO_NUMBERS = Array.from({ length: 47 }, (_, i) => i + 1);
 
@@ -44,6 +50,72 @@ const PRIZE_LABELS = {
     className: "text-xl font-bold text-yellow-300",
   },
 };
+
+// 獲獎者列表組件
+const WinnersList = React.memo(({ winners, matchCount, onClose }) => {
+  return (
+    <AlertDialog open={true} onOpenChange={onClose}>
+      <AlertDialogContent
+        className="bg-black/90 border-2 border-yellow-400 max-w-2xl max-h-[80vh] overflow-y-auto fixed"
+        handleBackgroundClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="relative z-10"
+        >
+          <div className="text-center mb-6">
+            <motion.div
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+              className="text-4xl font-bold text-yellow-300 mb-2"
+            >
+              {PRIZE_LABELS[matchCount].icon} {PRIZE_LABELS[matchCount].label}{" "}
+              Winners!
+            </motion.div>
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.7 }}
+              className="text-3xl text-yellow-400"
+            >
+              Prize: {DEFAULT_PRIZES[matchCount]}
+            </motion.div>
+          </div>
+
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 1 }}
+            className="space-y-4"
+          >
+            {winners
+              .filter((w) => w.matchCount === matchCount)
+              .map((winner, index) => (
+                <motion.div
+                  key={`${winner.username}-${index}`}
+                  initial={{ x: -50, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 1 + index * 0.1 }}
+                  className="bg-yellow-500/10 p-4 rounded-lg border border-yellow-400/30"
+                >
+                  <div className="text-5xl font-bold text-yellow-300 text-center">
+                    {maskUsername(winner.username)}
+                  </div>
+                  <div className="text-yellow-400/80 text-center">
+                    Numbers: {winner.numbers.join(", ")}
+                  </div>
+                </motion.div>
+              ))}
+          </motion.div>
+        </motion.div>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+});
+
 const maskUsername = (username) => {
   if (!username || username.length <= 3) return username;
   return `${username.slice(0, 2)}${"*".repeat(
@@ -81,7 +153,7 @@ const BackgroundLogos = React.memo(({ logos }) => (
       <img
         key={index}
         src={`${process.env.PUBLIC_URL}/${src}`}
-        width="100%"
+        width="75%"
         alt="background"
         className=""
       />
@@ -180,7 +252,7 @@ const LotteryMachine = React.memo(
     return (
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-b from-green-500/20 to-transparent -z-10 rounded-3xl" />
-        <div className="flex justify-center space-x-4 mb-8 p-8 rounded-3xl border-2 border-green-200/30 backdrop-blur-sm">
+        <div className="flex justify-center space-x-4 mb-4 p-8 rounded-3xl border-2 border-green-200/30 backdrop-blur-sm">
           {state.numbers.map((number, index) => (
             <Ball
               key={index}
@@ -214,41 +286,39 @@ const PrizeSettings = React.memo(({ onPrizeChange }) => {
     [onPrizeChange]
   );
 
- return (
-   <Card className="mb-6 bg-transparent">
-     <CardContent className="p-6">
-       <div className="flex items-center gap-2 mb-4">
-         <Trophy className="w-6 h-6 text-yellow-300" />
-         <h3 className="text-2xl font-bold text-yellow-300">Prize Settings</h3>
-       </div>
-       <div className="grid grid-cols-1 gap-4">
-         {WINNING_CATEGORIES.map((count) => (
-           <div
-             key={count}
-             className="flex items-center space-x-4 bg-red-900/60 p-4 rounded-lg"
-           >
-             <label className="w-fit font-medium flex items-center gap-3">
-               <span className="text-2xl">{PRIZE_LABELS[count].icon}</span>
-               <span className={PRIZE_LABELS[count].className}>
-                 {PRIZE_LABELS[count].label}:
-               </span>
-             </label>
-             <Input
-               type="text"
-               value={prizes[count]}
-               onChange={(e) => handlePrizeChange(count, e.target.value)}
-               placeholder={`Enter prize for ${PRIZE_LABELS[count].label}`}
-               className="flex-1 bg-red-800/60 border-yellow-400/50 text-yellow-300 text-xl placeholder:text-yellow-300/50 font-bold text-end border-none"
-             />
-           </div>
-         ))}
-       </div>
-     </CardContent>
-   </Card>
- );
+  return (
+    <Card className="mb-6 bg-transparent">
+      <CardContent className="p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Trophy className="w-6 h-6 text-yellow-300" />
+          <h3 className="text-2xl font-bold text-yellow-300">Prize Settings</h3>
+        </div>
+        <div className="grid grid-cols-1 gap-4">
+          {WINNING_CATEGORIES.map((count) => (
+            <div
+              key={count}
+              className="flex items-center space-x-4 bg-red-900/60 p-4 rounded-lg"
+            >
+              <label className="w-fit font-medium flex items-center gap-3">
+                <span className="text-2xl">{PRIZE_LABELS[count].icon}</span>
+                <span className={PRIZE_LABELS[count].className}>
+                  {PRIZE_LABELS[count].label}:
+                </span>
+              </label>
+              <Input
+                type="text"
+                value={prizes[count]}
+                onChange={(e) => handlePrizeChange(count, e.target.value)}
+                placeholder={`Enter prize for ${PRIZE_LABELS[count].label}`}
+                className="flex-1 bg-red-800/60 border-yellow-400/50 text-yellow-300 text-xl placeholder:text-yellow-300/50 font-bold text-end border-none"
+              />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
 });
-
-
 
 const ParticipantsList = React.memo(({ participants = {} }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -372,7 +442,9 @@ const ParticipantsList = React.memo(({ participants = {} }) => {
   );
 });
 
-const ResultsDisplay = React.memo(({ winners, prizes }) => {
+const ResultsDisplay = React.memo(({ winners, prizes, onShowCoinRain }) => {
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
   const winCounts = React.useMemo(() => {
     const counts = {
       6: 0,
@@ -386,6 +458,21 @@ const ResultsDisplay = React.memo(({ winners, prizes }) => {
     });
     return counts;
   }, [winners]);
+
+  const handleShowWinners = useCallback(
+    (category) => {
+      setSelectedCategory(category);
+      if (category === 6) {
+        onShowCoinRain(true);
+      }
+    },
+    [onShowCoinRain]
+  );
+
+  const handleCloseModal = useCallback(() => {
+    setSelectedCategory(null);
+    onShowCoinRain(false);
+  }, [onShowCoinRain]);
 
   return (
     <Card className="bg-transparent">
@@ -407,31 +494,58 @@ const ResultsDisplay = React.memo(({ winners, prizes }) => {
                     : "bg-red-900/60 backdrop-blur-sm"
                 }`}
             >
-              <div className="flex items-center gap-4">
-                <span className="text-3xl">{PRIZE_LABELS[count].icon}</span>
-                <div>
-                  <span className={PRIZE_LABELS[count].className}>
-                    {PRIZE_LABELS[count].label}
-                  </span>
-                  <div className="text-3xl font-semibold text-yellow-300 mt-1">
-                    {prizes[count] || DEFAULT_PRIZES[count]}
+              <div className="flex flex-col items-center gap-2 w-full">
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-4">
+                    <span className="text-3xl">{PRIZE_LABELS[count].icon}</span>
+                    <div>
+                      <span className={PRIZE_LABELS[count].className}>
+                        {PRIZE_LABELS[count].label}
+                      </span>
+                      <div className="text-3xl font-semibold text-yellow-300 mt-1">
+                        {prizes[count] || DEFAULT_PRIZES[count]}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
+                      <Users className="w-5 h-5 text-yellow-300" />
+                      <span className="text-4xl font-bold text-yellow-300">
+                        {winCounts[count]}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Users className="w-5 h-5 text-yellow-300" />
-                <span className="text-4xl font-bold text-yellow-300">
-                  {winCounts[count]}
-                </span>
+                {winCounts[count] > 0 && (
+                  <>
+                    <div className="flex w-full border-t" />
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 mx-4 border-none bg-transparent hover:bg-yellow-400/10 text-yellow-300 font-bold text-2xl"
+                      onClick={() => handleShowWinners(count)}
+                    >
+                      Show Winners {PRIZE_LABELS[count].icon}
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           ))}
         </div>
+
+        <AnimatePresence>
+          {selectedCategory !== null && (
+            <WinnersList
+              winners={winners}
+              matchCount={selectedCategory}
+              onClose={handleCloseModal}
+            />
+          )}
+        </AnimatePresence>
       </CardContent>
     </Card>
   );
 });
-
 
 const FileUpload = React.memo(({ onFileUpload }) => {
   const fileInputRef = useRef(null);
@@ -529,8 +643,12 @@ const LottoDraw = () => {
     winners: [],
     prizes: DEFAULT_PRIZES,
   });
-
+  const [showCoinRain, setShowCoinRain] = useState(false);
   const lotteryMachineRef = useRef(null);
+
+  const handleShowCoinRain = useCallback((show) => {
+    setShowCoinRain(show);
+  }, []);
 
   // 使用 useCallback 優化回調函數
   const onFileUpload = useCallback((accounts) => {
@@ -581,7 +699,7 @@ const LottoDraw = () => {
     () => (
       <div className="grid gap-6 relative">
         <Card className="overflow-hidden bg-white/10 backdrop-blur-sm border-white/20">
-          <CardContent className="p-8">
+          <CardContent className="p-4">
             <LotteryMachine ref={lotteryMachineRef} onComplete={checkWinners} />
             <div className="flex justify-center">
               <Button
@@ -624,6 +742,7 @@ const LottoDraw = () => {
           <ResultsDisplay
             winners={state.winners}
             prizes={state.prizes}
+            onShowCoinRain={handleShowCoinRain}
             className="bg-white/10 backdrop-blur-sm border-white/20"
           />
         </div>
@@ -642,6 +761,7 @@ const LottoDraw = () => {
       state.winners,
       state.prizes,
       state.accountList,
+      handleShowCoinRain,
     ]
   );
 
@@ -652,7 +772,8 @@ const LottoDraw = () => {
         backgroundImage: `url("${process.env.PUBLIC_URL}/integrate/background.png")`,
       }}
     >
-      <div className="container mx-auto p-4 max-w-screen-2xl relative">
+      <CelebrationEffect show={showCoinRain} />
+      <div className="container mx-auto p-4 max-w-full relative">
         <CompanyLogos />
         <div className="grid grid-cols-[20%_minmax(600px,_60%)_20%] gap-4">
           <BackgroundLogos

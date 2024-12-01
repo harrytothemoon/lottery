@@ -40,7 +40,7 @@ const specialCases = [
 csvContent += specialCases.join("\n") + "\n";
 
 // 生成大量隨機測試資料
-for (let i = 6; i <= 1000; i++) {
+for (let i = 6; i <= 2000; i++) {
   // 每個用戶產生1-3組號碼
   const numTickets = Math.floor(Math.random() * 3) + 1;
   for (let j = 0; j < numTickets; j++) {
