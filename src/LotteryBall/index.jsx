@@ -7,21 +7,14 @@ import React, {
 } from "react";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
 import { Trophy, Users } from "lucide-react";
 import { AlertDialog, AlertDialogContent } from "../components/ui/alert-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import CelebrationEffect from "./CelebratationEffect";
 import SettingsModal from "./SettingsModal";
+import ParticipantsList from "./ParticipantsList";
 
-const WINNER_EFFECT_COUNT = 4
+const WINNER_EFFECT_COUNT = 4;
 const BALL_COUNTS = 47;
 const DRAW_DURATION_SECONDS = 2;
 
@@ -381,129 +374,129 @@ const LotteryMachine = React.memo(
   })
 );
 
-const ParticipantsList = React.memo(({ participants = {} }) => {
-  // const [searchTerm, setSearchTerm] = useState("");
-  // const debouncedSearch = useRef(null);
+// const ParticipantsList = React.memo(({ participants = {} }) => {
+//   // const [searchTerm, setSearchTerm] = useState("");
+//   // const debouncedSearch = useRef(null);
 
-  const filteredParticipants = React.useMemo(() => {
-    // const searchLower = searchTerm.toLowerCase();
-    return Object.entries(participants).flatMap(([username, tickets]) =>
-      tickets.map((ticket) => ({
-        username,
-        numbers: ticket.join(", "),
-      }))
-    );
-    // .filter(
-    //   (item) =>
-    //     item.username.toLowerCase().includes(searchLower) ||
-    //     item.numbers.includes(searchTerm)
-    // );
-  }, [participants]);
+//   const filteredParticipants = React.useMemo(() => {
+//     // const searchLower = searchTerm.toLowerCase();
+//     return Object.entries(participants).flatMap(([username, tickets]) =>
+//       tickets.map((ticket) => ({
+//         username,
+//         numbers: ticket.join(", "),
+//       }))
+//     );
+//     // .filter(
+//     //   (item) =>
+//     //     item.username.toLowerCase().includes(searchLower) ||
+//     //     item.numbers.includes(searchTerm)
+//     // );
+//   }, [participants]);
 
-  // 優化搜索處理函數
-  // const handleSearch = useCallback((e) => {
-  //   if (debouncedSearch.current) {
-  //     clearTimeout(debouncedSearch.current);
-  //   }
-  //   debouncedSearch.current = setTimeout(() => {
-  //     setSearchTerm(e.target.value);
-  //   }, 300);
-  // }, []);
+//   // 優化搜索處理函數
+//   // const handleSearch = useCallback((e) => {
+//   //   if (debouncedSearch.current) {
+//   //     clearTimeout(debouncedSearch.current);
+//   //   }
+//   //   debouncedSearch.current = setTimeout(() => {
+//   //     setSearchTerm(e.target.value);
+//   //   }, 300);
+//   // }, []);
 
-  // 優化下載處理函數
-  // const handleDownload = useCallback(() => {
-  //   const csv = [
-  //     ["Username", "Numbers"],
-  //     ...filteredParticipants.map((p) => [p.username, p.numbers]),
-  //   ]
-  //     .map((row) => row.join(","))
-  //     .join("\n");
+//   // 優化下載處理函數
+//   // const handleDownload = useCallback(() => {
+//   //   const csv = [
+//   //     ["Username", "Numbers"],
+//   //     ...filteredParticipants.map((p) => [p.username, p.numbers]),
+//   //   ]
+//   //     .map((row) => row.join(","))
+//   //     .join("\n");
 
-  //   const blob = new Blob([csv], { type: "text/csv" });
-  //   const url = window.URL.createObjectURL(blob);
-  //   const a = document.createElement("a");
-  //   a.href = url;
-  //   a.download = "participants_list.csv";
-  //   a.click();
-  //   window.URL.revokeObjectURL(url);
-  // }, [filteredParticipants]);
+//   //   const blob = new Blob([csv], { type: "text/csv" });
+//   //   const url = window.URL.createObjectURL(blob);
+//   //   const a = document.createElement("a");
+//   //   a.href = url;
+//   //   a.download = "participants_list.csv";
+//   //   a.click();
+//   //   window.URL.revokeObjectURL(url);
+//   // }, [filteredParticipants]);
 
-  // 優化表格渲染
-  const TableContent = React.useMemo(
-    () => (
-      <Table>
-        <TableHeader className="sticky top-0 bg-background z-10">
-          <TableRow>
-            <TableHead className="w-[200px] text-lg font-bold">
-              Username
-            </TableHead>
-            <TableHead className="text-lg font-bold">Numbers</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredParticipants.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={2}
-                className="text-center text-muted-foreground"
-              >
-                No participants found
-              </TableCell>
-            </TableRow>
-          ) : (
-            filteredParticipants.map((p, i) => (
-              <TableRow key={`${p.username}-${i}`}>
-                <TableCell className="font-bold text-lg">
-                  {maskUsername(p.username)}
-                </TableCell>
-                <TableCell className="font-bold text-lg">{p.numbers}</TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    ),
-    [filteredParticipants]
-  );
+//   // 優化表格渲染
+//   const TableContent = React.useMemo(
+//     () => (
+//       <Table>
+//         <TableHeader className="sticky top-0 bg-background z-10">
+//           <TableRow>
+//             <TableHead className="w-[200px] text-lg font-bold">
+//               Username
+//             </TableHead>
+//             <TableHead className="text-lg font-bold">Numbers</TableHead>
+//           </TableRow>
+//         </TableHeader>
+//         <TableBody>
+//           {filteredParticipants.length === 0 ? (
+//             <TableRow>
+//               <TableCell
+//                 colSpan={2}
+//                 className="text-center text-muted-foreground"
+//               >
+//                 No participants found
+//               </TableCell>
+//             </TableRow>
+//           ) : (
+//             filteredParticipants.map((p, i) => (
+//               <TableRow key={`${p.username}-${i}`}>
+//                 <TableCell className="font-bold text-lg">
+//                   {maskUsername(p.username)}
+//                 </TableCell>
+//                 <TableCell className="font-bold text-lg">{p.numbers}</TableCell>
+//               </TableRow>
+//             ))
+//           )}
+//         </TableBody>
+//       </Table>
+//     ),
+//     [filteredParticipants]
+//   );
 
-  return (
-    <Card className="flex-1 bg-transparent">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Users className="w-10 h-10 text-white-300" />
-            <h3 className="text-[40px] font-bold text-yellow-300">
-              Participants List
-            </h3>
-            {/* <span className="text-sm text-muted-foreground">
-              ({filteredParticipants.length} tickets)
-            </span> */}
-          </div>
-          {/* <div className="flex items-center gap-4">
-            <Input
-              type="search"
-              placeholder="Search..."
-              onChange={handleSearch}
-              className="w-64 bg-transparent"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownload}
-              className="flex items-center gap-2 bg-transparent hover:bg-transparent hover:bg-yellow-400/10 transition-all duration-300 hover:text-yellow-300 hover:shadow-[0_0_20px_rgba(250,204,21,0.4)]"
-            >
-              <Download className="w-4 h-4" />
-              Export
-            </Button>
-          </div> */}
-        </div>
-        <div className="rounded-lg border">
-          <div className="max-h-[500px] overflow-auto">{TableContent}</div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-});
+//   return (
+//     <Card className="flex-1 bg-transparent">
+//       <CardContent className="p-6">
+//         <div className="flex items-center justify-between mb-4">
+//           <div className="flex items-center gap-2">
+//             <Users className="w-10 h-10 text-white-300" />
+//             <h3 className="text-[40px] font-bold text-yellow-300">
+//               Participants List
+//             </h3>
+//             {/* <span className="text-sm text-muted-foreground">
+//               ({filteredParticipants.length} tickets)
+//             </span> */}
+//           </div>
+//           {/* <div className="flex items-center gap-4">
+//             <Input
+//               type="search"
+//               placeholder="Search..."
+//               onChange={handleSearch}
+//               className="w-64 bg-transparent"
+//             />
+//             <Button
+//               variant="outline"
+//               size="sm"
+//               onClick={handleDownload}
+//               className="flex items-center gap-2 bg-transparent hover:bg-transparent hover:bg-yellow-400/10 transition-all duration-300 hover:text-yellow-300 hover:shadow-[0_0_20px_rgba(250,204,21,0.4)]"
+//             >
+//               <Download className="w-4 h-4" />
+//               Export
+//             </Button>
+//           </div> */}
+//         </div>
+//         <div className="rounded-lg border">
+//           <div className="max-h-[500px] overflow-auto">{TableContent}</div>
+//         </div>
+//       </CardContent>
+//     </Card>
+//   );
+// });
 
 const ResultsDisplay = React.memo(({ winners, prizes, onShowCoinRain }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
