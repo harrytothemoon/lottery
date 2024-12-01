@@ -86,78 +86,154 @@ const PrizeSettings = React.memo(({ onPrizeChange }) => {
 const FileUpload = React.memo(({ onFileUpload }) => {
   const fileInputRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [progress, setProgress] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState(null);
+  const workerRef = useRef(null);
+
+  // 創建 Web Worker 來處理檔案
+  const createWorker = () => {
+    try {
+      const workerCode = `
+        self.onmessage = function(e) {
+          try {
+            const { content, chunkSize } = e.data;
+            const lines = content.split('\\n').slice(1).filter(line => line.trim());
+            const accounts = {};
+            let processedLines = 0;
+            const totalLines = lines.length;
+
+            // 分批處理數據
+            for (let i = 0; i < lines.length; i += chunkSize) {
+              const chunk = lines.slice(i, i + chunkSize);
+              
+              chunk.forEach(line => {
+                const [username, ticket] = line.trim().split(',');
+                if (username && ticket) {
+                  const numbers = ticket.replace('Lodi', '').split('.').map(Number);
+                  if (!accounts[username]) {
+                    accounts[username] = [];
+                  }
+                  accounts[username].push(numbers);
+                }
+              });
+
+              processedLines += chunk.length;
+              // 回報進度
+              self.postMessage({
+                type: 'progress',
+                progress: (processedLines / totalLines) * 100
+              });
+            }
+
+            // 完成處理，返回結果
+            self.postMessage({
+              type: 'complete',
+              accounts
+            });
+          } catch (error) {
+            self.postMessage({
+              type: 'error',
+              error: error.message
+            });
+          }
+        };
+      `;
+
+      const blob = new Blob([workerCode], { type: "text/javascript" });
+      return new Worker(URL.createObjectURL(blob));
+    } catch (error) {
+      console.error("Error creating worker:", error);
+      throw error;
+    }
+  };
+
+  const cleanupWorker = useCallback(() => {
+    if (workerRef.current) {
+      workerRef.current.terminate();
+      workerRef.current = null;
+    }
+  }, []);
 
   const handleFileChange = useCallback(
     (event) => {
       const file = event.target.files[0];
       if (file) {
         setSelectedFile(file);
+        setIsProcessing(true);
+        setProgress(0);
+        setError(null);
+
+        // 清理舊的 Worker
+        cleanupWorker();
+
         const reader = new FileReader();
         reader.onload = (e) => {
           try {
-            const content = e.target.result;
-            const lines = content
-              .split("\n")
-              .slice(1)
-              .filter((line) => line.trim());
-            const accounts = {};
+            // 創建新的 Worker
+            workerRef.current = createWorker();
 
-            lines.forEach((line) => {
-              const [username, ticket] = line.trim().split(",");
-              if (username && ticket) {
-                const numbers = ticket
-                  .replace("Lodi", "")
-                  .split(".")
-                  .map(Number);
-                if (!accounts[username]) {
-                  accounts[username] = [];
-                }
-                accounts[username].push(numbers);
+            workerRef.current.onmessage = (workerEvent) => {
+              const { type, progress, accounts, error } = workerEvent.data;
+
+              if (type === "progress") {
+                setProgress(Math.round(progress));
+              } else if (type === "complete") {
+                onFileUpload(accounts);
+                setIsProcessing(false);
+                cleanupWorker();
+              } else if (type === "error") {
+                setError(error);
+                setIsProcessing(false);
+                cleanupWorker();
               }
-            });
+            };
 
-            onFileUpload(accounts);
+            workerRef.current.onerror = (error) => {
+              setError(error.message);
+              setIsProcessing(false);
+              cleanupWorker();
+            };
+
+            // 發送數據到 Worker
+            workerRef.current.postMessage({
+              content: e.target.result,
+              chunkSize: 1000,
+            });
           } catch (error) {
-            console.error("Error processing file:", error);
-            alert("Error processing file. Please check the file format.");
+            setError(error.message);
+            setIsProcessing(false);
+            cleanupWorker();
           }
         };
+
+        reader.onerror = (error) => {
+          setError(error.message);
+          setIsProcessing(false);
+          cleanupWorker();
+        };
+
+        // 以文本方式讀取檔案
         reader.readAsText(file);
       }
     },
-    [onFileUpload]
+    [onFileUpload, cleanupWorker]
   );
 
-  const CustomFileInput = React.useMemo(
-    () => (
-      <div className="mt-2">
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept=".csv"
-          className="hidden"
-        />
-        <Button
-          variant="outline"
-          onClick={() => fileInputRef.current?.click()}
-          className="w-full bg-transparent hover:bg-transparent hover:bg-yellow-400/10 transition-all duration-300 hover:text-yellow-300 hover:shadow-[0_0_20px_rgba(250,204,21,0.4)]"
-        >
-          <Upload className="w-4 h-4 mr-2" />
-          {selectedFile ? selectedFile.name : "Select Participants File"}
-        </Button>
-        {selectedFile && (
-          <p className="text-sm text-muted-foreground mt-1">
-            Selected file: {selectedFile.name}
-          </p>
-        )}
-        {!selectedFile && (
-          <p className="text-sm text-muted-foreground mt-1">No file selected</p>
-        )}
-      </div>
-    ),
-    [selectedFile, handleFileChange]
-  );
+  // 組件卸載時清理 Worker
+  React.useEffect(() => {
+    return () => {
+      cleanupWorker();
+    };
+  }, [cleanupWorker]);
+
+  const handleRetry = useCallback(() => {
+    setError(null);
+    setProgress(0);
+    setIsProcessing(false);
+    cleanupWorker();
+    fileInputRef.current.value = "";
+  }, [cleanupWorker]);
 
   return (
     <Card className="mb-6 bg-transparent">
@@ -166,7 +242,53 @@ const FileUpload = React.memo(({ onFileUpload }) => {
           <Upload className="w-5 h-5 text-white-500" />
           <h3 className="text-lg font-semibold">Upload Data</h3>
         </div>
-        <div className="space-y-4">{CustomFileInput}</div>
+        <div className="space-y-4">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept=".csv"
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isProcessing}
+            className="w-full bg-transparent hover:bg-transparent hover:bg-yellow-400/10 transition-all duration-300 hover:text-yellow-300 hover:shadow-[0_0_20px_rgba(250,204,21,0.4)]"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            {isProcessing
+              ? `Processing ${progress.toFixed(1)}%`
+              : selectedFile
+              ? selectedFile.name
+              : "Select Participants File"}
+          </Button>
+          {isProcessing && (
+            <div className="w-full bg-yellow-900/20 rounded-full h-2 mt-2">
+              <div
+                className="bg-yellow-500 h-full rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          )}
+          {error && (
+            <div className="mt-2">
+              <p className="text-red-500">Error: {error}</p>
+              <Button
+                variant="outline"
+                onClick={handleRetry}
+                className="mt-2 bg-red-500/20 hover:bg-red-500/30"
+              >
+                Retry
+              </Button>
+            </div>
+          )}
+          {selectedFile && !isProcessing && !error && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Selected file: {selectedFile.name}
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
