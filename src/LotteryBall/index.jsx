@@ -414,8 +414,7 @@ const LotteryMachine = React.memo(
         </AlertDialog>
 
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-b from-green-500/20 to-transparent -z-10 rounded-3xl" />
-          <div className="flex justify-center space-x-4 mb-4 p-8 rounded-3xl border-2 border-green-200/30 backdrop-blur-sm">
+          <div className="flex justify-center space-x-4 mb-2 p-4">
             {state.numbers.map((number, index) => (
               <Ball
                 key={index}
@@ -637,15 +636,25 @@ const LottoDraw = () => {
   // 使用 useMemo 優化主要內容區域
   const mainContent = useMemo(
     () => (
-      <div className="flex flex-col gap-6 relative">
-        <Card className="overflow-hidden bg-white/10 backdrop-blur-sm border-white/20">
-          <CardContent className="p-4">
+      <div className="flex flex-col gap-4 relative">
+        <div
+          className="w-full h-[50%] absolute inset-0 top-[-4%]"
+          style={{
+            maskImage: `url("${process.env.PUBLIC_URL}/integrate/hawk.svg")`,
+            maskSize: "contain",
+            maskRepeat: "no-repeat",
+            maskPosition: "center",
+            background: "brown",
+          }}
+        />
+        <Card className="bg-transparent backdrop-blur-sm border-white/20 border-none z-[1]">
+          <CardContent className="p-2">
             <LotteryMachine ref={lotteryMachineRef} onComplete={checkWinners} />
             <div className="flex justify-center">
               <Button
                 onClick={handleDrawNext}
                 disabled={lotteryMachineRef.current?.isDrawing}
-                className="w-100 h-24 text-[66px] font-semibold border-2 border-yellow-400/50 
+                className="w-64 h-16 text-[48px] font-semibold border-yellow-400/50 
                 bg-transparent hover:bg-yellow-400/10 transition-all duration-300
                 backdrop-blur-sm text-yellow-400 hover:text-yellow-300 hover:shadow-[0_0_20px_rgba(250,204,21,0.4)]"
                 variant="outline"
@@ -663,7 +672,7 @@ const LottoDraw = () => {
             </div>
           </CardContent>
         </Card>
-        <div className="flex gap-6">
+        <div className="flex gap-6 z-[1] flex-1">
           <ResultsDisplay
             winners={state.winners}
             prizes={state.prizes}
@@ -700,7 +709,7 @@ const LottoDraw = () => {
 
       <div className="container mx-auto p-4 max-w-full relative">
         <CompanyLogos />
-        <div className="grid grid-cols-[20%_minmax(600px,_60%)_20%] gap-4">
+        <div className="grid grid-cols-[20%_minmax(900px,_60%)_20%] gap-4">
           <BackgroundLogos
             logos={[
               "integrate/left1.webp",

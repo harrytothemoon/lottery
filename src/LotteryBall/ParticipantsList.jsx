@@ -43,7 +43,7 @@ const ParticipantsList = React.memo(({ participants = {} }) => {
 
   const TableWithVirtualization = () => (
     <Card className="flex-1 bg-transparent">
-      <CardContent className="p-6">
+      <CardContent className="p-6 flex flex-col h-full">
         <div className="flex items-center gap-2 mb-4">
           <Users className="w-10 h-10 text-white-300" />
           <div>
@@ -56,7 +56,7 @@ const ParticipantsList = React.memo(({ participants = {} }) => {
           </div>
         </div>
 
-        <div className="rounded-lg border">
+        <div className="rounded-lg border flex-1">
           <Table>
             <TableHeader className="sticky top-0 bg-transparent z-10">
               <TableRow>
@@ -69,8 +69,7 @@ const ParticipantsList = React.memo(({ participants = {} }) => {
               </TableRow>
             </TableHeader>
           </Table>
-
-          <div style={{ height: "500px" }}>
+          <div style={{ flex: "1" }}>
             <AutoSizer>
               {({ height, width }) => (
                 <List
