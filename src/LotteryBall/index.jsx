@@ -17,11 +17,22 @@ import CelebrationEffect from "./CelebratationEffect";
 import SettingsModal from "./SettingsModal";
 import ParticipantsList from "./ParticipantsList";
 
+const PREDEFINED_NUMBERS = [
+  [44, 39, 26, 25, 5, 4],
+  [46, 41, 25, 22, 16, 5],
+  [37, 35, 15, 12, 3, 1],
+  [45, 32, 31, 27, 18, 16],
+  [40, 29, 12, 11, 6, 4],
+  [38, 18, 15, 8, 4, 2],
+  [40, 31, 29, 10, 4, 3],
+  [36, 31, 13, 5, 4, 2],
+  [42, 26, 19, 16, 15, 5],
+  [46, 40, 39, 37, 32, 3],
+];
+
 const WINNER_EFFECT_COUNT = 4;
 const BALL_COUNTS = 47;
 const DRAW_DURATION_SECONDS = 2;
-
-const LOTTO_NUMBERS = Array.from({ length: BALL_COUNTS }, (_, i) => i + 1);
 
 const WINNING_CATEGORIES = [6, 5, 4];
 const DEFAULT_PRIZES = {
@@ -45,6 +56,15 @@ const PRIZE_LABELS = {
     icon: "🥈",
     className: "text-2xl font-bold text-yellow-300",
   },
+};
+
+const shuffleArray = (array) => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
 };
 
 const WinnersList = React.memo(({ winners, matchCount, onClose }) => {
@@ -279,20 +299,14 @@ const LotteryMachine = React.memo(
         isDrawing: true,
       }));
 
-      const remainingNumbers = LOTTO_NUMBERS.filter(
-        (num) => !state.numbers.slice(0, state.currentIndex).includes(num)
-      );
-      const number =
-        remainingNumbers[Math.floor(Math.random() * remainingNumbers.length)];
 
+      const number = state.selectedCombination[state.currentIndex];
       setNextNumber(number);
       setShowAnimation(true);
-
-      // 2秒後顯示中獎球
       setTimeout(() => {
         setShowFinalBall(true);
       }, DRAW_DURATION_SECONDS * 1000);
-    }, [state.currentIndex, state.numbers]);
+    }, [state.currentIndex, state.selectedCombination]);
 
     React.useImperativeHandle(ref, () => ({
       drawNextNumber,
@@ -304,6 +318,18 @@ const LotteryMachine = React.memo(
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
     });
+
+    React.useEffect(() => {
+      const originalCombination =
+        PREDEFINED_NUMBERS[
+          Math.floor(Math.random() * PREDEFINED_NUMBERS.length)
+        ];
+      const shuffledCombination = shuffleArray(originalCombination);
+      setState((prev) => ({
+        ...prev,
+        selectedCombination: shuffledCombination,
+      }));
+    }, []);
 
     return (
       <>
@@ -654,7 +680,7 @@ const LottoDraw = () => {
               <Button
                 onClick={handleDrawNext}
                 disabled={lotteryMachineRef.current?.isDrawing}
-                className="w-64 h-16 text-[48px] font-semibold border-yellow-400/50 
+                className="w-70 h-16 text-[48px] font-semibold border-yellow-400/50 
                 bg-transparent hover:bg-yellow-400/10 transition-all duration-300
                 backdrop-blur-sm text-yellow-400 hover:text-yellow-300 hover:shadow-[0_0_20px_rgba(250,204,21,0.4)]"
                 variant="outline"

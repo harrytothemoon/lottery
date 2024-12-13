@@ -56,7 +56,7 @@ const ParticipantsList = React.memo(({ participants = {} }) => {
           </div>
         </div>
 
-        <div className="rounded-lg border flex-1">
+        <div className="rounded-lg border flex-1 h-full overflow-hidden">
           <Table>
             <TableHeader className="sticky top-0 bg-transparent z-10">
               <TableRow>
@@ -69,7 +69,7 @@ const ParticipantsList = React.memo(({ participants = {} }) => {
               </TableRow>
             </TableHeader>
           </Table>
-          <div style={{ flex: "1" }}>
+          <div style={{ flex: "1", height:"100%" }}>
             <AutoSizer>
               {({ height, width }) => (
                 <List
