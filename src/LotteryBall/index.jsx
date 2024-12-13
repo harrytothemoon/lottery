@@ -735,7 +735,7 @@ const LottoDraw = () => {
 
       <div className="container mx-auto p-4 max-w-full relative">
         <CompanyLogos />
-        <div className="grid grid-cols-[20%_minmax(900px,_60%)_20%] gap-4">
+        <div className="grid grid-cols-[20%_minmax(900px,_60%)_20%] gap-4 overflow-hidden">
           <BackgroundLogos
             logos={[
               "integrate/left1.webp",

@@ -1,15 +1,15 @@
-import React, { useMemo } from "react";
-import { FixedSizeList as List } from "react-window";
-import AutoSizer from "react-virtualized-auto-sizer";
-import { Users } from "lucide-react";
-import { Card, CardContent } from "../components/ui/card";
+import React, { useMemo } from 'react';
+import { FixedSizeList as List } from 'react-window';
+import AutoSizer from 'react-virtualized-auto-sizer';
+import { Users } from 'lucide-react';
+import { Card, CardContent } from '../components/ui/card';
 import {
   Table,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "../components/ui/table";
+} from '../components/ui/table';
 
 const ROW_HEIGHT = 45;
 
@@ -17,9 +17,9 @@ const ParticipantsList = React.memo(({ participants = {} }) => {
   // 將參與者數據轉換為扁平數組格式
   const flattenedParticipants = useMemo(() => {
     return Object.entries(participants).flatMap(([username, tickets]) =>
-      tickets.map((ticket) => ({
+      tickets.map(ticket => ({
         username,
-        numbers: ticket.join(", "),
+        numbers: ticket.join(', '),
       }))
     );
   }, [participants]);
@@ -51,12 +51,14 @@ const ParticipantsList = React.memo(({ participants = {} }) => {
               Participants List
             </h3>
             <div className="text-xl text-muted-foreground font-bold">
-             Total: {new Intl.NumberFormat().format(flattenedParticipants.length)} tickets
+              Total:{' '}
+              {new Intl.NumberFormat().format(flattenedParticipants.length)}{' '}
+              tickets
             </div>
           </div>
         </div>
 
-        <div className="rounded-lg border flex-1 h-full overflow-hidden">
+        <div className="rounded-lg border flex-1">
           <Table>
             <TableHeader className="sticky top-0 bg-transparent z-10">
               <TableRow>
@@ -69,7 +71,7 @@ const ParticipantsList = React.memo(({ participants = {} }) => {
               </TableRow>
             </TableHeader>
           </Table>
-          <div style={{ flex: "1", height:"100%" }}>
+          <div style={{ flex: '1', height: '530px' }}>
             <AutoSizer>
               {({ height, width }) => (
                 <List
@@ -92,9 +94,9 @@ const ParticipantsList = React.memo(({ participants = {} }) => {
   return <TableWithVirtualization />;
 });
 
-const maskUsername = (username) => {
+const maskUsername = username => {
   if (!username || username.length <= 3) return username;
-  return `${username.slice(0, 2)}${"*".repeat(
+  return `${username.slice(0, 2)}${'*'.repeat(
     username.length - 3
   )}${username.slice(-1)}`;
 };

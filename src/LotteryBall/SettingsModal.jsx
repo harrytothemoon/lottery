@@ -1,34 +1,34 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Settings } from "lucide-react";
-import { Button } from "../components/ui/button";
-import { AlertDialog, AlertDialogContent } from "../components/ui/alert-dialog";
-import { Card, CardContent } from "../components/ui/card";
-import { Input } from "../components/ui/input";
-import { Trophy, Upload } from "lucide-react";
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Settings } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { AlertDialog, AlertDialogContent } from '../components/ui/alert-dialog';
+import { Card, CardContent } from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { Trophy, Upload } from 'lucide-react';
 
 const WINNING_CATEGORIES = [6, 5, 4];
 const PRIZE_LABELS = {
   6: {
-    label: "Jackpot",
-    icon: "👑",
-    className: "text-2xl font-bold text-yellow-300",
+    label: 'Jackpot',
+    icon: '👑',
+    className: 'text-2xl font-bold text-yellow-300',
   },
   5: {
-    label: "First Prize",
-    icon: "🏆",
-    className: "text-xl font-bold text-yellow-300",
+    label: 'First Prize',
+    icon: '🏆',
+    className: 'text-xl font-bold text-yellow-300',
   },
   4: {
-    label: "Second Prize",
-    icon: "🥈",
-    className: "text-xl font-bold text-yellow-300",
+    label: 'Second Prize',
+    icon: '🥈',
+    className: 'text-xl font-bold text-yellow-300',
   },
 };
 
 const DEFAULT_PRIZES = {
-  6: "₱1,000,000",
-  5: "₱3,888",
-  4: "₱88",
+  6: '₱1,000,000',
+  5: '₱3,888',
+  4: '₱88',
 };
 
 const PrizeSettings = React.memo(({ onPrizeChange }) => {
@@ -40,7 +40,7 @@ const PrizeSettings = React.memo(({ onPrizeChange }) => {
 
   const handlePrizeChange = useCallback(
     (count, value) => {
-      setPrizes((prev) => {
+      setPrizes(prev => {
         const newPrizes = { ...prev, [count]: value };
         onPrizeChange(newPrizes);
         return newPrizes;
@@ -57,7 +57,7 @@ const PrizeSettings = React.memo(({ onPrizeChange }) => {
           <h3 className="text-2xl font-bold text-yellow-300">Prize Settings</h3>
         </div>
         <div className="grid grid-cols-1 gap-4">
-          {WINNING_CATEGORIES.map((count) => (
+          {WINNING_CATEGORIES.map(count => (
             <div
               key={count}
               className="flex items-center space-x-4 bg-red-900/60 p-4 rounded-lg"
@@ -71,7 +71,7 @@ const PrizeSettings = React.memo(({ onPrizeChange }) => {
               <Input
                 type="text"
                 value={prizes[count]}
-                onChange={(e) => handlePrizeChange(count, e.target.value)}
+                onChange={e => handlePrizeChange(count, e.target.value)}
                 placeholder={`Enter prize for ${PRIZE_LABELS[count].label}`}
                 className="flex-1 bg-red-800/60 border-yellow-400/50 text-yellow-300 text-xl placeholder:text-yellow-300/50 font-bold text-end border-none"
               />
@@ -108,13 +108,19 @@ const FileUpload = React.memo(({ onFileUpload }) => {
               const chunk = lines.slice(i, i + chunkSize);
               
               chunk.forEach(line => {
-                const [username, ticket] = line.trim().split(',');
-                if (username && ticket) {
-                  const numbers = ticket.replace('Lodi', '').split('.').map(Number);
-                  if (!accounts[username]) {
-                    accounts[username] = [];
+                // 使用正則表達式來正確處理CSV格式
+                const match = line.match(/^([^,]+),(".*")$/);
+                if (match) {
+                  const username = match[1];
+                  const ticketStr = match[2];
+                  if (username && ticketStr) {
+                    // 去掉外層引號,然後分割數字
+                    const numbers = ticketStr.replace(/^"|"$/g, '').split(',').map(Number);
+                    if (!accounts[username]) {
+                      accounts[username] = [];
+                    }
+                    accounts[username].push(numbers);
                   }
-                  accounts[username].push(numbers);
                 }
               });
 
@@ -140,10 +146,10 @@ const FileUpload = React.memo(({ onFileUpload }) => {
         };
       `;
 
-      const blob = new Blob([workerCode], { type: "text/javascript" });
+      const blob = new Blob([workerCode], { type: 'text/javascript' });
       return new Worker(URL.createObjectURL(blob));
     } catch (error) {
-      console.error("Error creating worker:", error);
+      console.error('Error creating worker:', error);
       throw error;
     }
   };
@@ -156,7 +162,7 @@ const FileUpload = React.memo(({ onFileUpload }) => {
   }, []);
 
   const handleFileChange = useCallback(
-    (event) => {
+    event => {
       const file = event.target.files[0];
       if (file) {
         setSelectedFile(file);
@@ -168,28 +174,28 @@ const FileUpload = React.memo(({ onFileUpload }) => {
         cleanupWorker();
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = e => {
           try {
             // 創建新的 Worker
             workerRef.current = createWorker();
 
-            workerRef.current.onmessage = (workerEvent) => {
+            workerRef.current.onmessage = workerEvent => {
               const { type, progress, accounts, error } = workerEvent.data;
 
-              if (type === "progress") {
+              if (type === 'progress') {
                 setProgress(Math.round(progress));
-              } else if (type === "complete") {
+              } else if (type === 'complete') {
                 onFileUpload(accounts);
                 setIsProcessing(false);
                 cleanupWorker();
-              } else if (type === "error") {
+              } else if (type === 'error') {
                 setError(error);
                 setIsProcessing(false);
                 cleanupWorker();
               }
             };
 
-            workerRef.current.onerror = (error) => {
+            workerRef.current.onerror = error => {
               setError(error.message);
               setIsProcessing(false);
               cleanupWorker();
@@ -207,7 +213,7 @@ const FileUpload = React.memo(({ onFileUpload }) => {
           }
         };
 
-        reader.onerror = (error) => {
+        reader.onerror = error => {
           setError(error.message);
           setIsProcessing(false);
           cleanupWorker();
@@ -232,7 +238,7 @@ const FileUpload = React.memo(({ onFileUpload }) => {
     setProgress(0);
     setIsProcessing(false);
     cleanupWorker();
-    fileInputRef.current.value = "";
+    fileInputRef.current.value = '';
   }, [cleanupWorker]);
 
   return (
@@ -261,7 +267,7 @@ const FileUpload = React.memo(({ onFileUpload }) => {
               ? `Processing ${progress.toFixed(1)}%`
               : selectedFile
               ? selectedFile.name
-              : "Select Participants File"}
+              : 'Select Participants File'}
           </Button>
           {isProcessing && (
             <div className="w-full bg-yellow-900/20 rounded-full h-2 mt-2">
@@ -317,7 +323,7 @@ const SettingsModal = ({ onFileUpload, onPrizeChange }) => {
             onClick={() => setOpen(false)}
             className="w-full h-12 rounded-l bg-yellow-500/20 hover:bg-yellow-500/30 border-2 border-yellow-400/50"
           >
-           Confirm
+            Confirm
           </Button>
         </AlertDialogContent>
       </AlertDialog>
