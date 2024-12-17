@@ -98,6 +98,7 @@ const FileUpload = React.memo(({ onFileUpload }) => {
         self.onmessage = function(e) {
           try {
             const { content, chunkSize } = e.data;
+            // 移除開頭的 BOM 和換行符，然後過濾空行
             const lines = content.split('\\n').slice(1).filter(line => line.trim());
             const accounts = {};
             let processedLines = 0;
@@ -108,8 +109,10 @@ const FileUpload = React.memo(({ onFileUpload }) => {
               const chunk = lines.slice(i, i + chunkSize);
               
               chunk.forEach(line => {
+                // 移除可能的換行符 \\r
+                const cleanLine = line.replace(/\\r$/, '');
                 // 使用正則表達式來正確處理CSV格式
-                const match = line.match(/^([^,]+),(".*")$/);
+                const match = cleanLine.match(/^([^,]+),(".*")$/);
                 if (match) {
                   const username = match[1];
                   const ticketStr = match[2];
@@ -145,6 +148,7 @@ const FileUpload = React.memo(({ onFileUpload }) => {
           }
         };
       `;
+
 
       const blob = new Blob([workerCode], { type: 'text/javascript' });
       return new Worker(URL.createObjectURL(blob));
