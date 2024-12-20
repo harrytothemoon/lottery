@@ -15,7 +15,7 @@ import { AlertDialog, AlertDialogContent } from "../components/ui/alert-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import CelebrationEffect from "./CelebratationEffect";
 import SettingsModal from "./SettingsModal";
-import ParticipantsList from "./ParticipantsList";
+import ParticipantsList, { maskUsername } from "./ParticipantsList";
 
 const PREDEFINED_NUMBERS = [
   [44, 39, 26, 25, 5, 4],
@@ -149,12 +149,6 @@ const WinnersList = React.memo(({ winners, matchCount, onClose }) => {
   );
 });
 
-const maskUsername = (username) => {
-  if (!username || username.length <= 3) return username;
-  return `${username.slice(0, 2)}${"*".repeat(
-    username.length - 3
-  )}${username.slice(-1)}`;
-};
 
 const CompanyLogos = React.memo(() => (
   <div className="flex justify-center items-center gap-8 mb-6 w-full px-8">
@@ -179,7 +173,6 @@ const CompanyLogos = React.memo(() => (
     />
   </div>
 ));
-
 
 const BackgroundLogos = React.memo(({ logos }) => {
   // 判斷媒體類型
@@ -298,7 +291,6 @@ const LotteryMachine = React.memo(
         isSpinning: true,
         isDrawing: true,
       }));
-
 
       const number = state.selectedCombination[state.currentIndex];
       setNextNumber(number);

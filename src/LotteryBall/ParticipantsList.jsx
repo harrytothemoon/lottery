@@ -58,7 +58,7 @@ const ParticipantsList = React.memo(({ participants = {} }) => {
           </div>
         </div>
 
-        <div className="rounded-lg border flex-1">
+        <div className="rounded-lg border-gray-400 border-[1.5px] flex-1">
           <Table>
             <TableHeader className="sticky top-0 bg-transparent z-10">
               <TableRow>
@@ -94,11 +94,9 @@ const ParticipantsList = React.memo(({ participants = {} }) => {
   return <TableWithVirtualization />;
 });
 
-const maskUsername = username => {
-  if (!username || username.length <= 3) return username;
-  return `${username.slice(0, 2)}${'*'.repeat(
-    username.length - 3
-  )}${username.slice(-1)}`;
+export const maskUsername = (username) => {
+  if (!username) return username;
+  return `${username.slice(0, username.length - 3)}${"*".repeat(3)}`;
 };
 
 export default ParticipantsList;
