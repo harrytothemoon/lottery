@@ -327,7 +327,7 @@ const LotteryMachine = React.memo(
       <>
         <AlertDialog open={showAnimation} onOpenChange={setShowAnimation}>
           <AlertDialogContent className="fixed flex items-center justify-center bg-transparent border-none shadow-none max-w-none w-screen h-screen p-0 m-0">
-            <div className="fixed inset-0 flex items-center justify-center overflow-hidden">
+            <div className="fixed inset-0 flex items-center justify-center">
               {/* Random floating balls */}
               {Array.from({ length: BALL_COUNTS }).map((_, i) => {
                 const initialPos = getRandomPosition();
@@ -717,7 +717,7 @@ const LottoDraw = () => {
 
   return (
     <div
-      className="min-h-screen bg-cover"
+      className="min-h-screen bg-cover overflow-hidden"
       style={{
         backgroundImage: `url("${process.env.PUBLIC_URL}/integrate/background.png")`,
       }}
@@ -727,7 +727,7 @@ const LottoDraw = () => {
 
       <div className="container mx-auto p-4 max-w-full relative">
         <CompanyLogos />
-        <div className="grid grid-cols-[20%_minmax(900px,_60%)_20%] gap-4 overflow-hidden">
+        <div className="grid grid-cols-[20%_minmax(900px,_60%)_20%] gap-4">
           <BackgroundLogos
             logos={[
               "integrate/left1.webp",
