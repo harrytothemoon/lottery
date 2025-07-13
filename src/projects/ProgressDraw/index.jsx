@@ -7,7 +7,6 @@ import React, {
 } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
@@ -26,9 +25,10 @@ import {
   AlertDialog,
   AlertDialogContent,
 } from '../../components/ui/alert-dialog';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import useFavicon from '../../hooks/index';
-import { CONFIG, verifyPassword, hasAdminQuery, githubAPI } from './config';
+import { CONFIG, verifyPassword, hasAdminQuery } from './config';
+import { googleSheetsAPI, GOOGLE_SHEETS_CONFIG } from './googleSheets';
 
 const DEFAULT_MILESTONES = [
   { threshold: 2000, prize: '🎮 Gaming Headset', achieved: false },
@@ -78,102 +78,38 @@ const NeonText = ({ children, className = '', color = 'cyan' }) => {
 };
 
 const SettingsModal = ({
-  onFileUpload,
-  onMilestonesChange,
-  currentMilestones,
+  onRefreshData,
+  onSheetUrlChange,
+  currentSheetUrl,
 }) => {
   const [open, setOpen] = useState(false);
-  const [milestones, setMilestones] = useState(
-    currentMilestones || DEFAULT_MILESTONES
+  const [sheetUrl, setSheetUrl] = useState(
+    currentSheetUrl || GOOGLE_SHEETS_CONFIG.SHEET_URL
   );
-  const fileInputRef = useRef(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState(null);
 
-  // 当外部milestones更新时，同步内部状态
-  React.useEffect(() => {
-    if (currentMilestones) {
-      setMilestones(currentMilestones);
+  const handleTestConnection = useCallback(async () => {
+    setIsTestingConnection(true);
+    setConnectionStatus(null);
+
+    try {
+      const result = await googleSheetsAPI.testConnection(sheetUrl);
+      setConnectionStatus(result);
+    } catch (error) {
+      setConnectionStatus({
+        success: false,
+        error: error.message,
+      });
+    } finally {
+      setIsTestingConnection(false);
     }
-  }, [currentMilestones]);
+  }, [sheetUrl]);
 
-  const handleFileChange = useCallback(
-    event => {
-      const file = event.target.files[0];
-      if (file) {
-        setIsProcessing(true);
-        setProgress(0);
-
-        const reader = new FileReader();
-        reader.onprogress = e => {
-          if (e.lengthComputable) {
-            setProgress((e.loaded / e.total) * 100);
-          }
-        };
-
-        reader.onload = e => {
-          const content = e.target.result;
-          const lines = content
-            .split('\n')
-            .slice(1)
-            .filter(line => line.trim() !== '');
-
-          const accountList = lines.reduce((acc, line) => {
-            const [username, ticket] = line.trim().split(',');
-            if (username && ticket) {
-              if (!acc[username]) {
-                acc[username] = [];
-              }
-              acc[username].push(ticket);
-            }
-            return acc;
-          }, {});
-
-          onFileUpload(accountList);
-          setIsProcessing(false);
-        };
-
-        reader.readAsText(file);
-      }
-    },
-    [onFileUpload]
-  );
-
-  const handleMilestoneChange = useCallback(
-    (index, field, value) => {
-      setMilestones(prev => {
-        const newMilestones = [...prev];
-        newMilestones[index] = { ...newMilestones[index], [field]: value };
-        onMilestonesChange(newMilestones);
-        return newMilestones;
-      });
-    },
-    [onMilestonesChange]
-  );
-
-  const addMilestone = useCallback(() => {
-    const newMilestone = {
-      threshold: 0,
-      prize: '🎁 New Prize',
-      achieved: false,
-    };
-    setMilestones(prev => {
-      const newMilestones = [...prev, newMilestone];
-      onMilestonesChange(newMilestones);
-      return newMilestones;
-    });
-  }, [onMilestonesChange]);
-
-  const removeMilestone = useCallback(
-    index => {
-      setMilestones(prev => {
-        const newMilestones = prev.filter((_, i) => i !== index);
-        onMilestonesChange(newMilestones);
-        return newMilestones;
-      });
-    },
-    [onMilestonesChange]
-  );
+  const handleSheetUrlSubmit = useCallback(() => {
+    onSheetUrlChange(sheetUrl);
+    setConnectionStatus(null);
+  }, [sheetUrl, onSheetUrlChange]);
 
   return (
     <>
@@ -196,92 +132,70 @@ const SettingsModal = ({
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent className="max-w-4xl bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 border-2 border-cyan-400/50">
           <div className="space-y-6">
-            {/* File Upload Section */}
+            {/* Google Sheets Configuration */}
             <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-cyan-400/30 p-6">
               <div className="flex items-center gap-3 mb-4">
                 <Users className="w-6 h-6 text-cyan-400" />
-                <NeonText className="text-xl">
-                  Upload Participants List
-                </NeonText>
+                <NeonText className="text-xl">Google Sheets 数据源</NeonText>
               </div>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept=".csv"
-                className="hidden"
-              />
-              <GamingButton
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isProcessing}
-                className="w-full"
-              >
-                {isProcessing
-                  ? `Processing ${progress.toFixed(1)}%`
-                  : '🎮 Select CSV File'}
-              </GamingButton>
-              {isProcessing && (
-                <div className="w-full bg-black/50 rounded-full h-3 mt-3 border border-cyan-400/30">
-                  <motion.div
-                    className="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 0.3 }}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-cyan-400 mb-2">
+                    Google Sheets 链接
+                  </label>
+                  <Input
+                    type="url"
+                    value={sheetUrl}
+                    onChange={e => setSheetUrl(e.target.value)}
+                    placeholder="https://docs.google.com/spreadsheets/d/..."
+                    className="w-full bg-black/50 border-cyan-400/50 text-cyan-400 placeholder:text-cyan-400/50"
                   />
                 </div>
-              )}
-            </div>
 
-            {/* Milestones Settings */}
-            <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-purple-400/30 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Trophy className="w-6 h-6 text-purple-400" />
-                <NeonText color="purple" className="text-xl">
-                  Milestone Settings
-                </NeonText>
-              </div>
-              <div className="space-y-4">
-                {milestones.map((milestone, index) => (
-                  <motion.div
-                    key={index}
-                    className="flex items-center space-x-4 bg-black/40 p-4 rounded-lg border border-purple-400/20"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
+                <div className="flex gap-3">
+                  <GamingButton
+                    onClick={handleTestConnection}
+                    disabled={isTestingConnection}
+                    className="flex-1"
                   >
-                    <Input
-                      type="number"
-                      value={milestone.threshold}
-                      onChange={e =>
-                        handleMilestoneChange(
-                          index,
-                          'threshold',
-                          parseInt(e.target.value) || 0
-                        )
-                      }
-                      placeholder="Threshold"
-                      className="w-32 bg-black/50 border-cyan-400/50 text-cyan-400 placeholder:text-cyan-400/50"
-                    />
-                    <Input
-                      type="text"
-                      value={milestone.prize}
-                      onChange={e =>
-                        handleMilestoneChange(index, 'prize', e.target.value)
-                      }
-                      placeholder="Prize description"
-                      className="flex-1 bg-black/50 border-purple-400/50 text-purple-400 placeholder:text-purple-400/50"
-                    />
-                    <Button
-                      onClick={() => removeMilestone(index)}
-                      className="bg-red-600/20 hover:bg-red-600/30 text-red-400 border-red-400/50"
-                    >
-                      Remove
-                    </Button>
-                  </motion.div>
-                ))}
-                <GamingButton onClick={addMilestone} className="w-full">
-                  ➕ Add Milestone
+                    {isTestingConnection ? '测试中...' : '🔗 测试连接'}
+                  </GamingButton>
+                  <GamingButton
+                    onClick={handleSheetUrlSubmit}
+                    className="flex-1"
+                  >
+                    ✅ 保存配置
+                  </GamingButton>
+                </div>
+
+                <GamingButton onClick={onRefreshData} className="w-full">
+                  🔄 刷新数据
                 </GamingButton>
+
+                {connectionStatus && (
+                  <div
+                    className={`p-4 rounded-lg border ${
+                      connectionStatus.success
+                        ? 'bg-green-600/20 border-green-400/50 text-green-400'
+                        : 'bg-red-600/20 border-red-400/50 text-red-400'
+                    }`}
+                  >
+                    {connectionStatus.success ? (
+                      <div>
+                        <p className="font-bold">✅ 连接成功！</p>
+                        <p>用户数量: {connectionStatus.userCount}</p>
+                        <p>总票数: {connectionStatus.totalTickets}</p>
+                        <p>里程碑数量: {connectionStatus.milestoneCount}</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="font-bold">❌ 连接失败</p>
+                        <p>{connectionStatus.error}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -505,7 +419,7 @@ const ProgressDraw = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [lastSync, setLastSync] = useState(null);
-  const [githubSha, setGithubSha] = useState(null);
+  const [sheetUrl, setSheetUrl] = useState(GOOGLE_SHEETS_CONFIG.SHEET_URL);
 
   // 权限控制 - 检查query参数和登录状态
   const hasAdminAccess = hasAdminQuery();
@@ -517,6 +431,49 @@ const ProgressDraw = () => {
   const [showPasswordInput, setShowPasswordInput] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [loginAttempts, setLoginAttempts] = useState(0);
+
+  // 数据加载函数
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // 从 Google Sheets 加载所有数据（用户数据和里程碑数据）
+      const { accountList: accountData, milestones: milestoneData } =
+        await googleSheetsAPI.fetchAllData(sheetUrl);
+
+      setAccountList(accountData);
+      setMilestones(milestoneData);
+      setLastSync(new Date().toISOString());
+
+      // 缓存到本地存储
+      localStorage.setItem(
+        'progressDraw_accountList',
+        JSON.stringify(accountData)
+      );
+      localStorage.setItem(
+        'progressDraw_milestones',
+        JSON.stringify(milestoneData)
+      );
+      localStorage.setItem('progressDraw_lastSync', new Date().toISOString());
+    } catch (error) {
+      console.error('Google Sheets 数据加载失败:', error);
+      // Fallback 到本地存储
+      try {
+        const savedAccounts = localStorage.getItem('progressDraw_accountList');
+        const savedMilestones = localStorage.getItem('progressDraw_milestones');
+        const savedLastSync = localStorage.getItem('progressDraw_lastSync');
+
+        setAccountList(savedAccounts ? JSON.parse(savedAccounts) : {});
+        setMilestones(
+          savedMilestones ? JSON.parse(savedMilestones) : DEFAULT_MILESTONES
+        );
+        setLastSync(savedLastSync);
+      } catch (localError) {
+        console.error('本地数据加载也失败:', localError);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [sheetUrl]);
 
   // 在线状态监测
   useEffect(() => {
@@ -534,8 +491,25 @@ const ProgressDraw = () => {
 
   // 初始化数据加载
   useEffect(() => {
+    // 从本地存储加载保存的 Sheet URL
+    const savedSheetUrl = localStorage.getItem('progressDraw_sheetUrl');
+    if (savedSheetUrl) {
+      setSheetUrl(savedSheetUrl);
+    }
+
     loadData();
   }, []);
+
+  // 自动刷新数据
+  useEffect(() => {
+    if (GOOGLE_SHEETS_CONFIG.AUTO_REFRESH) {
+      const interval = setInterval(() => {
+        loadData();
+      }, GOOGLE_SHEETS_CONFIG.REFRESH_INTERVAL * 60 * 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [loadData]);
 
   // 自动登出定时器
   useEffect(() => {
@@ -556,123 +530,14 @@ const ProgressDraw = () => {
     );
   }, [accountList]);
 
-  // 数据加载函数
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      if (isOnline && CONFIG.GITHUB.TOKEN) {
-        // 尝试从GitHub加载
-        const result = await githubAPI.getData();
-        if (result.success) {
-          setAccountList(result.data.accountList || {});
-          setMilestones(result.data.milestones || DEFAULT_MILESTONES);
-          setGithubSha(result.sha);
-          setLastSync(new Date().toISOString());
+  const handleSheetUrlChange = useCallback(newSheetUrl => {
+    setSheetUrl(newSheetUrl);
+    localStorage.setItem('progressDraw_sheetUrl', newSheetUrl);
+  }, []);
 
-          // 同步到localStorage作为备份
-          localStorage.setItem(
-            'progressDraw_accountList',
-            JSON.stringify(result.data.accountList || {})
-          );
-          localStorage.setItem(
-            'progressDraw_milestones',
-            JSON.stringify(result.data.milestones || DEFAULT_MILESTONES)
-          );
-        } else {
-          throw new Error(result.error);
-        }
-      } else {
-        // 离线模式：从localStorage加载
-        const savedAccounts = localStorage.getItem('progressDraw_accountList');
-        const savedMilestones = localStorage.getItem('progressDraw_milestones');
-
-        setAccountList(savedAccounts ? JSON.parse(savedAccounts) : {});
-        setMilestones(
-          savedMilestones ? JSON.parse(savedMilestones) : DEFAULT_MILESTONES
-        );
-      }
-    } catch (error) {
-      console.error('数据加载失败:', error);
-      // Fallback到localStorage
-      try {
-        const savedAccounts = localStorage.getItem('progressDraw_accountList');
-        const savedMilestones = localStorage.getItem('progressDraw_milestones');
-
-        setAccountList(savedAccounts ? JSON.parse(savedAccounts) : {});
-        setMilestones(
-          savedMilestones ? JSON.parse(savedMilestones) : DEFAULT_MILESTONES
-        );
-      } catch (localError) {
-        console.error('本地数据加载也失败:', localError);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isOnline]);
-
-  // 数据保存函数
-  const saveData = useCallback(
-    async (newAccountList, newMilestones) => {
-      const data = {
-        accountList: newAccountList,
-        milestones: newMilestones,
-        lastUpdate: new Date().toISOString(),
-      };
-
-      try {
-        if (isOnline && CONFIG.GITHUB.TOKEN && isAdmin) {
-          // 保存到GitHub
-          const result = await githubAPI.saveData(data, githubSha);
-          if (result.success) {
-            setGithubSha(result.sha);
-            setLastSync(new Date().toISOString());
-            console.log('数据已保存到GitHub');
-          } else {
-            throw new Error(result.error);
-          }
-        }
-
-        // 总是保存到localStorage作为备份
-        localStorage.setItem(
-          'progressDraw_accountList',
-          JSON.stringify(newAccountList)
-        );
-        localStorage.setItem(
-          'progressDraw_milestones',
-          JSON.stringify(newMilestones)
-        );
-      } catch (error) {
-        console.error('数据保存失败:', error);
-        // 至少保存到localStorage
-        localStorage.setItem(
-          'progressDraw_accountList',
-          JSON.stringify(newAccountList)
-        );
-        localStorage.setItem(
-          'progressDraw_milestones',
-          JSON.stringify(newMilestones)
-        );
-        alert('在线保存失败，数据已保存到本地');
-      }
-    },
-    [isOnline, githubSha, isAdmin]
-  );
-
-  const handleFileUpload = useCallback(
-    async accounts => {
-      setAccountList(accounts);
-      await saveData(accounts, milestones);
-    },
-    [milestones, saveData]
-  );
-
-  const handleMilestonesChange = useCallback(
-    async newMilestones => {
-      setMilestones(newMilestones);
-      await saveData(accountList, newMilestones);
-    },
-    [accountList, saveData]
-  );
+  const handleRefreshData = useCallback(() => {
+    loadData();
+  }, [loadData]);
 
   const handlePasswordSubmit = useCallback(() => {
     if (loginAttempts >= CONFIG.SECURITY.MAX_LOGIN_ATTEMPTS) {
@@ -701,23 +566,6 @@ const ProgressDraw = () => {
     setIsAdmin(false);
     localStorage.removeItem('progressDraw_isAdmin');
   }, []);
-
-  const handleClearData = useCallback(async () => {
-    if (window.confirm('确定要清除所有数据吗？此操作不可撤销！')) {
-      const emptyData = {};
-      const defaultMilestones = DEFAULT_MILESTONES;
-
-      setAccountList(emptyData);
-      setMilestones(defaultMilestones);
-
-      await saveData(emptyData, defaultMilestones);
-      alert('数据已清除！');
-    }
-  }, [saveData]);
-
-  const handleRefreshData = useCallback(() => {
-    loadData();
-  }, [loadData]);
 
   return (
     <div
@@ -791,9 +639,9 @@ const ProgressDraw = () => {
         <>
           {isAdmin ? (
             <SettingsModal
-              onFileUpload={handleFileUpload}
-              onMilestonesChange={handleMilestonesChange}
-              currentMilestones={milestones}
+              onRefreshData={handleRefreshData}
+              onSheetUrlChange={handleSheetUrlChange}
+              currentSheetUrl={sheetUrl}
             />
           ) : (
             <motion.div
@@ -840,17 +688,6 @@ const ProgressDraw = () => {
             >
               <Cloud className="w-4 h-4 mr-1" />
               {isLoading ? '同步中...' : '同步数据'}
-            </Button>
-          </motion.div>
-          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-            <Button
-              onClick={handleClearData}
-              className="px-4 py-2 rounded-full bg-gradient-to-r from-orange-600 to-orange-700 
-                       hover:from-orange-500 hover:to-orange-600 border-2 border-orange-400/50
-                       shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:shadow-[0_0_30px_rgba(249,115,22,0.6)]
-                       transition-all duration-300 text-white font-bold"
-            >
-              🗑️ 清除数据
             </Button>
           </motion.div>
         </div>
