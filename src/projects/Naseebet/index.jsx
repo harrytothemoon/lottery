@@ -706,7 +706,7 @@ const Naseebet = () => {
             <img
               src={`${process.env.PUBLIC_URL}/naseebet/logo.jpeg`}
               alt="Naseebet Logo"
-              className="mx-auto h-60 w-auto rounded-xl mb-6 bg-[#ffffffB3]"
+              className="mx-auto h-60 w-auto rounded-xl mb-6"
             />
           </div>
 
