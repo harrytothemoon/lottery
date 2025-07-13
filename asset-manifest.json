@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/lottery/static/css/main.c4e03850.css",
-    "main.js": "/lottery/static/js/main.58a1248c.js",
+    "main.js": "/lottery/static/js/main.6b4eec6e.js",
     "static/js/885.f2243d04.chunk.js": "/lottery/static/js/885.f2243d04.chunk.js",
     "static/media/game-music.mp3": "/lottery/static/media/game-music.b9d14351ed0239e7afcb.mp3",
     "static/media/spin.wav": "/lottery/static/media/spin.5f0c8d85d4f9155cd6b6.wav",
@@ -9,11 +9,11 @@
     "static/media/win.mp3": "/lottery/static/media/win.1a4aa36e26105c19f7fc.mp3",
     "index.html": "/lottery/index.html",
     "main.c4e03850.css.map": "/lottery/static/css/main.c4e03850.css.map",
-    "main.58a1248c.js.map": "/lottery/static/js/main.58a1248c.js.map",
+    "main.6b4eec6e.js.map": "/lottery/static/js/main.6b4eec6e.js.map",
     "885.f2243d04.chunk.js.map": "/lottery/static/js/885.f2243d04.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.c4e03850.css",
-    "static/js/main.58a1248c.js"
+    "static/js/main.6b4eec6e.js"
   ]
 }
