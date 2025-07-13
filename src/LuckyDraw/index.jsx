@@ -1,19 +1,19 @@
 // App.jsx
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Card, CardContent } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import useSound from "use-sound";
-import Confetti from "react-confetti";
-import { useTheme } from "../themes";
-import spinSound from "../sounds/spin.wav";
-import winSound from "../sounds/win.mp3";
-import winSoundChristmas from "../sounds/christmas-win.mp3";
-import ChristmasEffects from "../components/christmasEffects";
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Card, CardContent } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import useSound from 'use-sound';
+import Confetti from 'react-confetti';
+import { useTheme } from '../themes';
+import spinSound from '../sounds/spin.wav';
+import winSound from '../sounds/win.mp3';
+import winSoundChristmas from '../sounds/christmas-win.mp3';
+import ChristmasEffects from '../components/christmasEffects';
 
-const maskUsername = (username) => {
+const maskUsername = username => {
   if (!username || username.length <= 3) return username;
-  return `${username.slice(0, 2)}${"*".repeat(
+  return `${username.slice(0, 2)}${'*'.repeat(
     username.length - 3
   )}${username.slice(-1)}`;
 };
@@ -55,7 +55,7 @@ const Modal = ({ isOpen, onClose, children, theme, themeName }) => {
 
 const Reel = ({ spinning, stopSymbol, shouldReveal, theme }) => {
   const symbols = React.useMemo(
-    () => ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+    () => ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
     []
   );
   const [position, setPosition] = useState(
@@ -93,16 +93,16 @@ const SlotMachine = React.forwardRef(
     const [revealedCount, setRevealedCount] = useState(0);
 
     const spin = useCallback(
-      (result) => {
+      result => {
         setSpinning(true);
         setStopSymbols(Array(digitCount).fill(null));
         setRevealedCount(0);
 
-        const revealNextDigit = (index) => {
+        const revealNextDigit = index => {
           if (index < digitCount) {
             setTimeout(
               () => {
-                setStopSymbols((prev) => {
+                setStopSymbols(prev => {
                   const newSymbols = [...prev];
                   newSymbols[index] = result[index];
                   return newSymbols;
@@ -114,7 +114,7 @@ const SlotMachine = React.forwardRef(
             );
           } else {
             setSpinning(false);
-            onComplete(result.join(""));
+            onComplete(result.join(''));
           }
         };
 
@@ -153,25 +153,25 @@ const FileUpload = ({
   themeName,
 }) => {
   const fileInputRef = useRef(null);
-  const [prize, setPrize] = useState("");
+  const [prize, setPrize] = useState('');
 
-  const handlePrizeChange = (event) => {
+  const handlePrizeChange = event => {
     setPrize(event.target.value);
     onPrizeChange(event.target.value);
   };
 
-  const handleFileChange = (event) => {
+  const handleFileChange = event => {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         const content = e.target.result;
         const lines = content
-          .split("\n")
+          .split('\n')
           .slice(1)
-          .filter((line) => line.trim() !== "");
+          .filter(line => line.trim() !== '');
         const accountList = lines.reduce((acc, line) => {
-          const [username, ticket] = line.trim().split(",");
+          const [username, ticket] = line.trim().split(',');
           if (username && ticket) {
             if (!acc[username]) {
               acc[username] = [];
@@ -182,7 +182,7 @@ const FileUpload = ({
         }, {});
 
         const maxTicket = lines.reduce((max, line) => {
-          const parts = line.trim().split(",");
+          const parts = line.trim().split(',');
           if (parts.length < 2) return max;
           const ticket = parts[1];
           const match = ticket.match(/[1-9]\d*/);
@@ -191,7 +191,7 @@ const FileUpload = ({
             return numericPart.length > max.length ? numericPart : max;
           }
           return max;
-        }, "");
+        }, '');
         const digits = maxTicket.length;
         onDigitCountChange(digits);
 
@@ -290,7 +290,7 @@ const FancyTable = ({
                     key={colIndex}
                     className={`px-4 py-2 border-t ${theme.text.accent} ${theme.border}`}
                   >
-                    {column.toLowerCase() === "username"
+                    {column.toLowerCase() === 'username'
                       ? maskUsername(row[column.toLowerCase()])
                       : row[column.toLowerCase()]}
                   </td>
@@ -306,7 +306,7 @@ const FancyTable = ({
 
 const AccountList = ({ accounts, theme, themeName }) => {
   const data = Object.entries(accounts).flatMap(([username, tickets]) =>
-    tickets.map((ticket) => ({ username, ticket }))
+    tickets.map(ticket => ({ username, ticket }))
   );
 
   const totalTickets = data.length;
@@ -314,7 +314,7 @@ const AccountList = ({ accounts, theme, themeName }) => {
   return (
     <FancyTable
       data={data}
-      columns={["Username", "Ticket"]}
+      columns={['Username', 'Ticket']}
       title="Account List"
       totalTickets={totalTickets}
       theme={theme}
@@ -326,15 +326,15 @@ const AccountList = ({ accounts, theme, themeName }) => {
 const WinnersList = ({ winners, theme, themeName }) => {
   const handleDownload = () => {
     const csvContent =
-      "data:text/csv;charset=utf-8," +
-      "Username,Ticket,Prize\n" +
+      'data:text/csv;charset=utf-8,' +
+      'Username,Ticket,Prize\n' +
       winners
-        .map((w) => `${maskUsername(w.username)},${w.ticket},${w.prize}`)
-        .join("\n");
+        .map(w => `${maskUsername(w.username)},${w.ticket},${w.prize}`)
+        .join('\n');
     const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "winners_list.csv");
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', 'winners_list.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -343,7 +343,7 @@ const WinnersList = ({ winners, theme, themeName }) => {
   return (
     <FancyTable
       data={winners}
-      columns={["Username", "Ticket", "Prize"]}
+      columns={['Username', 'Ticket', 'Prize']}
       title="Winners List"
       theme={theme}
       handleDownload={handleDownload}
@@ -353,17 +353,17 @@ const WinnersList = ({ winners, theme, themeName }) => {
 };
 
 const LuckyDraw = ({ backgroundImageUrl, LogoUrl, defaultTheme }) => {
-  const [themeName, setThemeName] = useState(defaultTheme || "blue");
+  const [themeName, setThemeName] = useState(defaultTheme || 'blue');
   const theme = useTheme(themeName);
   const [accountList, setAccountList] = useState({});
   const [winners, setWinners] = useState([]);
   const [spinning, setSpinning] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentWinner, setCurrentWinner] = useState(null);
-  const [currentPrize, setCurrentPrize] = useState("");
+  const [currentPrize, setCurrentPrize] = useState('');
   const [digitCount, setDigitCount] = useState(4);
   const slotMachineRef = useRef(null);
-  const isChristmasTheme = themeName === "christmas";
+  const isChristmasTheme = themeName === 'christmas';
 
   const [playSpinSound, { stop: stopSpinSound }] = useSound(spinSound, {
     loop: true,
@@ -374,20 +374,20 @@ const LuckyDraw = ({ backgroundImageUrl, LogoUrl, defaultTheme }) => {
 
   const handleSpin = useCallback(() => {
     if (Object.keys(accountList).length === 0) {
-      alert("Please upload the account list first");
+      alert('Please upload the account list first');
       return;
     }
 
     const allTickets = Object.entries(accountList).flatMap(
-      ([username, tickets]) => tickets.map((ticket) => ({ username, ticket }))
+      ([username, tickets]) => tickets.map(ticket => ({ username, ticket }))
     );
 
     const remainingTickets = allTickets.filter(
-      (ticket) => !winners.some((winner) => winner.ticket === ticket.ticket)
+      ticket => !winners.some(winner => winner.ticket === ticket.ticket)
     );
 
     if (remainingTickets.length === 0) {
-      alert("All tickets have been drawn!");
+      alert('All tickets have been drawn!');
       return;
     }
 
@@ -397,9 +397,9 @@ const LuckyDraw = ({ backgroundImageUrl, LogoUrl, defaultTheme }) => {
     const randomIndex = Math.floor(Math.random() * remainingTickets.length);
     const winner = remainingTickets[randomIndex];
 
-    const ticketNumber = winner.ticket.replace(/^\D+/, "");
-    const paddedTicket = ticketNumber.padStart(digitCount, "0");
-    const newNumbers = paddedTicket.slice(-digitCount).split("");
+    const ticketNumber = winner.ticket.replace(/^\D+/, '');
+    const paddedTicket = ticketNumber.padStart(digitCount, '0');
+    const newNumbers = paddedTicket.slice(-digitCount).split('');
 
     if (slotMachineRef.current) {
       slotMachineRef.current.spin(newNumbers);
@@ -407,21 +407,21 @@ const LuckyDraw = ({ backgroundImageUrl, LogoUrl, defaultTheme }) => {
   }, [accountList, winners, playSpinSound, digitCount]);
 
   const handleSpinComplete = useCallback(
-    (result) => {
+    result => {
       setSpinning(false);
       stopSpinSound();
       const winner = Object.entries(accountList)
         .flatMap(([username, tickets]) =>
-          tickets.map((ticket) => ({ username, ticket }))
+          tickets.map(ticket => ({ username, ticket }))
         )
-        .find((ticket) => {
-          const numericPart = ticket.ticket.replace(/^\D+/, "");
-          return numericPart.padStart(digitCount, "0").endsWith(result);
+        .find(ticket => {
+          const numericPart = ticket.ticket.replace(/^\D+/, '');
+          return numericPart.padStart(digitCount, '0').endsWith(result);
         });
 
       if (winner) {
         winner.prize = currentPrize;
-        setWinners((prev) => [...prev, winner]);
+        setWinners(prev => [...prev, winner]);
         setCurrentWinner(winner);
 
         setTimeout(() => {
@@ -429,7 +429,7 @@ const LuckyDraw = ({ backgroundImageUrl, LogoUrl, defaultTheme }) => {
           playWinSound();
         }, 300);
 
-        setAccountList((prevList) => {
+        setAccountList(prevList => {
           const newList = { ...prevList };
           const userTickets = newList[winner.username];
           const index = userTickets.indexOf(winner.ticket);
@@ -446,10 +446,10 @@ const LuckyDraw = ({ backgroundImageUrl, LogoUrl, defaultTheme }) => {
     [accountList, playWinSound, stopSpinSound, currentPrize, digitCount]
   );
 
-  const handleFileUpload = useCallback((newAccountList) => {
+  const handleFileUpload = useCallback(newAccountList => {
     setAccountList(newAccountList);
     setWinners([]);
-    alert("Account list uploaded successfully");
+    alert('Account list uploaded successfully');
   }, []);
 
   const handleCloseModal = () => {
@@ -463,12 +463,13 @@ const LuckyDraw = ({ backgroundImageUrl, LogoUrl, defaultTheme }) => {
       <div className="fixed top-4 right-4 z-50">
         <select
           value={themeName}
-          onChange={(e) => setThemeName(e.target.value)}
+          onChange={e => setThemeName(e.target.value)}
           className="p-2 rounded border bg-white"
         >
           <option value="blue">Blue Theme</option>
           <option value="dark">Dark Theme</option>
           <option value="christmas">Christmas Theme</option>
+          <option value="green">Green Theme</option>
         </select>
       </div>
       <div
@@ -507,7 +508,7 @@ const LuckyDraw = ({ backgroundImageUrl, LogoUrl, defaultTheme }) => {
                 disabled={spinning}
                 themeName={themeName}
               >
-                {spinning ? "Drawing..." : "Start Draw"}
+                {spinning ? 'Drawing...' : 'Start Draw'}
               </Button>
               <FileUpload
                 onFileUpload={handleFileUpload}
@@ -552,7 +553,7 @@ const LuckyDraw = ({ backgroundImageUrl, LogoUrl, defaultTheme }) => {
               <span className="font-semibold">Winner:</span>
             </p>
             <p className={`text-3xl font-bold mb-4 ${theme.text.primary}`}>
-              {currentWinner ? maskUsername(currentWinner.username) : ""}
+              {currentWinner ? maskUsername(currentWinner.username) : ''}
             </p>
             <p className={`text-xl mb-2 ${theme.text.secondary}`}>
               <span className="font-semibold">Ticket Number:</span>
