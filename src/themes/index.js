@@ -233,7 +233,7 @@ export const themes = {
       description: 'text-sm text-[#f8f9fa]',
       content: 'p-6 pt-0',
       footer: 'flex items-center p-6 pt-0',
-      background: 'bg-[#1a4a2e]',
+      background: 'bg-[#1a4a2e80]',
       border: 'border-[#ffffff]',
     },
     table: {
