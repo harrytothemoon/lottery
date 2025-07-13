@@ -702,11 +702,11 @@ const Naseebet = () => {
           </div>
 
           {/* Logo */}
-          <div className="text-center mb-8">
+          <div className="text-center">
             <img
               src={`${process.env.PUBLIC_URL}/naseebet/logo.jpeg`}
               alt="Naseebet Logo"
-              className="mx-auto h-60 w-auto rounded-xl mb-6"
+              className="mx-auto h-60 w-auto rounded-xl"
             />
           </div>
 
