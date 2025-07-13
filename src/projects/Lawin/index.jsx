@@ -1,7 +1,7 @@
-import LuckyDraw from "../../LuckyDraw";
-import useFavicon from "../../hooks/index";
+import LuckyDraw from '../../LuckyDraw';
+import useFavicon from '../../hooks/index';
 
-const Lodibet = () => {
+const Lawin = () => {
   useFavicon();
   return (
     <LuckyDraw
@@ -12,4 +12,4 @@ const Lodibet = () => {
   );
 };
 
-export default Lodibet;
+export default Lawin;

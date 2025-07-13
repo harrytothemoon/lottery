@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const useFavicon = () => {
   const location = useLocation();
@@ -7,40 +7,48 @@ const useFavicon = () => {
   useEffect(() => {
     const favicon = document.querySelector("link[rel='icon']");
     if (!favicon) {
-      const newFavicon = document.createElement("link");
-      newFavicon.rel = "icon";
+      const newFavicon = document.createElement('link');
+      newFavicon.rel = 'icon';
       document.head.appendChild(newFavicon);
     }
 
     const brandConfigs = {
       lawin: {
         favicon: `${process.env.PUBLIC_URL}/lawin/favicon.ico`,
-        title: "LAWINPLAY SLOT MACHINE",
+        title: 'LAWINPLAY SLOT MACHINE',
       },
       lodibet: {
         favicon: `${process.env.PUBLIC_URL}/lodibet/favicon.ico`,
-        title: "LODIBET SLOT MACHINE",
+        title: 'LODIBET SLOT MACHINE',
       },
       integrate: {
         favicon: `${process.env.PUBLIC_URL}/integrate/favicon.ico`,
-        title: "INTEGRATED LOTTERY SYSTEM",
+        title: 'INTEGRATED LOTTERY SYSTEM',
+      },
+      naseebet: {
+        favicon: `${process.env.PUBLIC_URL}/naseebet/favicon.ico`,
+        title: 'NASEEBET SLOT MACHINE',
       },
     };
 
     const path = location.pathname;
 
-    if (path.includes("/lawin")) {
+    if (path.includes('/lawin')) {
       document.querySelector("link[rel='icon']").href =
         brandConfigs.lawin.favicon;
       document.title = brandConfigs.lawin.title;
-    } else if (path.includes("/lodibet")) {
+    } else if (path.includes('/lodibet')) {
       document.querySelector("link[rel='icon']").href =
         brandConfigs.lodibet.favicon;
       document.title = brandConfigs.lodibet.title;
-    } else if (path.includes("/integrate")) {
+    } else if (path.includes('/integrate')) {
       document.querySelector("link[rel='icon']").href =
         brandConfigs.integrate.favicon;
       document.title = brandConfigs.integrate.title;
+    } else if (path.includes('/naseebet')) {
+      document.querySelector("link[rel='icon']").href =
+        brandConfigs.naseebet.favicon;
+      document.title = brandConfigs.naseebet.title;
     }
   }, [location]);
 };

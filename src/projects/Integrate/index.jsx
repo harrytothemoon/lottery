@@ -1,11 +1,9 @@
-import LotteryBall from "../../LotteryBall";
-import useFavicon from "../../hooks/index";
+import LotteryBall from '../../LotteryBall';
+import useFavicon from '../../hooks/index';
 
-const Lodibet = () => {
+const Integrate = () => {
   useFavicon();
-  return (
-    <LotteryBall />
-  );
+  return <LotteryBall />;
 };
 
-export default Lodibet;
+export default Integrate;
