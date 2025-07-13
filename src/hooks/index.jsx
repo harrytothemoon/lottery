@@ -29,6 +29,10 @@ const useFavicon = () => {
         favicon: `${process.env.PUBLIC_URL}/naseebet/favicon.ico`,
         title: 'NASEEBET SLOT MACHINE',
       },
+      progress: {
+        favicon: `${process.env.PUBLIC_URL}/progress/favicon.ico`,
+        title: 'PROGRESS LOTTERY SYSTEM',
+      },
     };
 
     const path = location.pathname;
@@ -49,6 +53,10 @@ const useFavicon = () => {
       document.querySelector("link[rel='icon']").href =
         brandConfigs.naseebet.favicon;
       document.title = brandConfigs.naseebet.title;
+    } else if (path.includes('/progress')) {
+      document.querySelector("link[rel='icon']").href =
+        brandConfigs.progress.favicon;
+      document.title = brandConfigs.progress.title;
     }
   }, [location]);
 };

@@ -9,6 +9,7 @@ import Lawin from './projects/Lawin';
 import Lodibet from './projects/Lodibet';
 import Integrate from './projects/Integrate';
 import Naseebet from './projects/Naseebet';
+import ProgressDraw from './projects/ProgressDraw';
 
 const App = () => {
   return (
@@ -18,6 +19,7 @@ const App = () => {
         <Route path="/lodibet" element={<Lodibet />} />
         <Route path="/integrate" element={<Integrate />} />
         <Route path="/naseebet" element={<Naseebet />} />
+        <Route path="/progress" element={<ProgressDraw />} />
         <Route path="*" element={<Navigate to="/lawin" replace />} />
       </Routes>
     </Router>
