@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useRef, useMemo } from 'react';
+import React, {
+  useState,
+  useCallback,
+  useRef,
+  useMemo,
+  useEffect,
+} from 'react';
 import { FixedSizeList as List } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { Card, CardContent } from '../../components/ui/card';
@@ -12,6 +18,9 @@ import {
   Target,
   Zap,
   Star,
+  Cloud,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -19,6 +28,7 @@ import {
 } from '../../components/ui/alert-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import useFavicon from '../../hooks/index';
+import { CONFIG, verifyPassword, hasAdminQuery, githubAPI } from './config';
 
 const DEFAULT_MILESTONES = [
   { threshold: 2000, prize: '🎮 Gaming Headset', achieved: false },
@@ -67,12 +77,25 @@ const NeonText = ({ children, className = '', color = 'cyan' }) => {
   );
 };
 
-const SettingsModal = ({ onFileUpload, onMilestonesChange }) => {
+const SettingsModal = ({
+  onFileUpload,
+  onMilestonesChange,
+  currentMilestones,
+}) => {
   const [open, setOpen] = useState(false);
-  const [milestones, setMilestones] = useState(DEFAULT_MILESTONES);
+  const [milestones, setMilestones] = useState(
+    currentMilestones || DEFAULT_MILESTONES
+  );
   const fileInputRef = useRef(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
+
+  // 当外部milestones更新时，同步内部状态
+  React.useEffect(() => {
+    if (currentMilestones) {
+      setMilestones(currentMilestones);
+    }
+  }, [currentMilestones]);
 
   const handleFileChange = useCallback(
     event => {
@@ -474,9 +497,57 @@ const ParticipantsList = ({ participants, searchTerm }) => {
 
 const ProgressDraw = () => {
   useFavicon();
+
+  // 状态管理
   const [accountList, setAccountList] = useState({});
   const [milestones, setMilestones] = useState(DEFAULT_MILESTONES);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [lastSync, setLastSync] = useState(null);
+  const [githubSha, setGithubSha] = useState(null);
+
+  // 权限控制 - 检查query参数和登录状态
+  const hasAdminAccess = hasAdminQuery();
+  const [isAdmin, setIsAdmin] = useState(() => {
+    return (
+      hasAdminAccess && localStorage.getItem('progressDraw_isAdmin') === 'true'
+    );
+  });
+  const [showPasswordInput, setShowPasswordInput] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [loginAttempts, setLoginAttempts] = useState(0);
+
+  // 在线状态监测
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // 初始化数据加载
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // 自动登出定时器
+  useEffect(() => {
+    if (isAdmin && CONFIG.SECURITY.AUTO_LOGOUT_MINUTES > 0) {
+      const timer = setTimeout(() => {
+        handleLogout();
+        alert('会话已过期，请重新登录');
+      }, CONFIG.SECURITY.AUTO_LOGOUT_MINUTES * 60 * 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isAdmin]);
 
   const totalTickets = useMemo(() => {
     return Object.values(accountList).reduce(
@@ -485,13 +556,168 @@ const ProgressDraw = () => {
     );
   }, [accountList]);
 
-  const handleFileUpload = useCallback(accounts => {
-    setAccountList(accounts);
+  // 数据加载函数
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      if (isOnline && CONFIG.GITHUB.TOKEN) {
+        // 尝试从GitHub加载
+        const result = await githubAPI.getData();
+        if (result.success) {
+          setAccountList(result.data.accountList || {});
+          setMilestones(result.data.milestones || DEFAULT_MILESTONES);
+          setGithubSha(result.sha);
+          setLastSync(new Date().toISOString());
+
+          // 同步到localStorage作为备份
+          localStorage.setItem(
+            'progressDraw_accountList',
+            JSON.stringify(result.data.accountList || {})
+          );
+          localStorage.setItem(
+            'progressDraw_milestones',
+            JSON.stringify(result.data.milestones || DEFAULT_MILESTONES)
+          );
+        } else {
+          throw new Error(result.error);
+        }
+      } else {
+        // 离线模式：从localStorage加载
+        const savedAccounts = localStorage.getItem('progressDraw_accountList');
+        const savedMilestones = localStorage.getItem('progressDraw_milestones');
+
+        setAccountList(savedAccounts ? JSON.parse(savedAccounts) : {});
+        setMilestones(
+          savedMilestones ? JSON.parse(savedMilestones) : DEFAULT_MILESTONES
+        );
+      }
+    } catch (error) {
+      console.error('数据加载失败:', error);
+      // Fallback到localStorage
+      try {
+        const savedAccounts = localStorage.getItem('progressDraw_accountList');
+        const savedMilestones = localStorage.getItem('progressDraw_milestones');
+
+        setAccountList(savedAccounts ? JSON.parse(savedAccounts) : {});
+        setMilestones(
+          savedMilestones ? JSON.parse(savedMilestones) : DEFAULT_MILESTONES
+        );
+      } catch (localError) {
+        console.error('本地数据加载也失败:', localError);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isOnline]);
+
+  // 数据保存函数
+  const saveData = useCallback(
+    async (newAccountList, newMilestones) => {
+      const data = {
+        accountList: newAccountList,
+        milestones: newMilestones,
+        lastUpdate: new Date().toISOString(),
+      };
+
+      try {
+        if (isOnline && CONFIG.GITHUB.TOKEN && isAdmin) {
+          // 保存到GitHub
+          const result = await githubAPI.saveData(data, githubSha);
+          if (result.success) {
+            setGithubSha(result.sha);
+            setLastSync(new Date().toISOString());
+            console.log('数据已保存到GitHub');
+          } else {
+            throw new Error(result.error);
+          }
+        }
+
+        // 总是保存到localStorage作为备份
+        localStorage.setItem(
+          'progressDraw_accountList',
+          JSON.stringify(newAccountList)
+        );
+        localStorage.setItem(
+          'progressDraw_milestones',
+          JSON.stringify(newMilestones)
+        );
+      } catch (error) {
+        console.error('数据保存失败:', error);
+        // 至少保存到localStorage
+        localStorage.setItem(
+          'progressDraw_accountList',
+          JSON.stringify(newAccountList)
+        );
+        localStorage.setItem(
+          'progressDraw_milestones',
+          JSON.stringify(newMilestones)
+        );
+        alert('在线保存失败，数据已保存到本地');
+      }
+    },
+    [isOnline, githubSha, isAdmin]
+  );
+
+  const handleFileUpload = useCallback(
+    async accounts => {
+      setAccountList(accounts);
+      await saveData(accounts, milestones);
+    },
+    [milestones, saveData]
+  );
+
+  const handleMilestonesChange = useCallback(
+    async newMilestones => {
+      setMilestones(newMilestones);
+      await saveData(accountList, newMilestones);
+    },
+    [accountList, saveData]
+  );
+
+  const handlePasswordSubmit = useCallback(() => {
+    if (loginAttempts >= CONFIG.SECURITY.MAX_LOGIN_ATTEMPTS) {
+      alert('登录尝试次数过多，请稍后再试');
+      return;
+    }
+
+    if (verifyPassword(passwordInput)) {
+      setIsAdmin(true);
+      localStorage.setItem('progressDraw_isAdmin', 'true');
+      setShowPasswordInput(false);
+      setPasswordInput('');
+      setLoginAttempts(0);
+    } else {
+      setLoginAttempts(prev => prev + 1);
+      alert(
+        `密码错误！还可以尝试 ${
+          CONFIG.SECURITY.MAX_LOGIN_ATTEMPTS - loginAttempts - 1
+        } 次`
+      );
+      setPasswordInput('');
+    }
+  }, [passwordInput, loginAttempts]);
+
+  const handleLogout = useCallback(() => {
+    setIsAdmin(false);
+    localStorage.removeItem('progressDraw_isAdmin');
   }, []);
 
-  const handleMilestonesChange = useCallback(newMilestones => {
-    setMilestones(newMilestones);
-  }, []);
+  const handleClearData = useCallback(async () => {
+    if (window.confirm('确定要清除所有数据吗？此操作不可撤销！')) {
+      const emptyData = {};
+      const defaultMilestones = DEFAULT_MILESTONES;
+
+      setAccountList(emptyData);
+      setMilestones(defaultMilestones);
+
+      await saveData(emptyData, defaultMilestones);
+      alert('数据已清除！');
+    }
+  }, [saveData]);
+
+  const handleRefreshData = useCallback(() => {
+    loadData();
+  }, [loadData]);
 
   return (
     <div
@@ -528,10 +754,168 @@ const ProgressDraw = () => {
         />
       </div>
 
-      <SettingsModal
-        onFileUpload={handleFileUpload}
-        onMilestonesChange={handleMilestonesChange}
-      />
+      {/* 在线状态指示器 */}
+      <motion.div
+        className="fixed top-4 right-4 z-[20] flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-4 py-2 border border-cyan-400/30"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1 }}
+      >
+        {isOnline ? (
+          <>
+            <Wifi className="w-4 h-4 text-green-400" />
+            <span className="text-green-400 text-sm font-medium">在线</span>
+            {lastSync && (
+              <span className="text-gray-400 text-xs">
+                最后同步: {new Date(lastSync).toLocaleTimeString()}
+              </span>
+            )}
+          </>
+        ) : (
+          <>
+            <WifiOff className="w-4 h-4 text-red-400" />
+            <span className="text-red-400 text-sm font-medium">离线</span>
+          </>
+        )}
+        {isLoading && (
+          <motion.div
+            className="w-3 h-3 bg-cyan-400 rounded-full"
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1, repeat: Infinity }}
+          />
+        )}
+      </motion.div>
+
+      {/* 管理员权限控制 - 只有在有admin query参数时才显示 */}
+      {hasAdminAccess && (
+        <>
+          {isAdmin ? (
+            <SettingsModal
+              onFileUpload={handleFileUpload}
+              onMilestonesChange={handleMilestonesChange}
+              currentMilestones={milestones}
+            />
+          ) : (
+            <motion.div
+              className="fixed bottom-4 left-4 z-[20]"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <Button
+                onClick={() => setShowPasswordInput(true)}
+                className="w-14 h-14 rounded-full bg-gradient-to-r from-gray-600 to-gray-700 
+                         hover:from-gray-500 hover:to-gray-600 border-2 border-gray-400/50
+                         shadow-[0_0_20px_rgba(75,85,99,0.4)] hover:shadow-[0_0_30px_rgba(75,85,99,0.6)]
+                         transition-all duration-300"
+              >
+                <Settings className="w-7 h-7 text-white" />
+              </Button>
+            </motion.div>
+          )}
+        </>
+      )}
+
+      {/* 管理员登出按钮 */}
+      {hasAdminAccess && isAdmin && (
+        <div className="fixed bottom-4 left-20 z-[20] flex gap-3">
+          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <Button
+              onClick={handleLogout}
+              className="px-4 py-2 rounded-full bg-gradient-to-r from-red-600 to-red-700 
+                       hover:from-red-500 hover:to-red-600 border-2 border-red-400/50
+                       shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)]
+                       transition-all duration-300 text-white font-bold"
+            >
+              退出管理
+            </Button>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <Button
+              onClick={handleRefreshData}
+              className="px-4 py-2 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 
+                       hover:from-blue-500 hover:to-blue-600 border-2 border-blue-400/50
+                       shadow-[0_0_20px_rgba(59,130,246,0.4)] hover:shadow-[0_0_30px_rgba(59,130,246,0.6)]
+                       transition-all duration-300 text-white font-bold"
+              disabled={isLoading}
+            >
+              <Cloud className="w-4 h-4 mr-1" />
+              {isLoading ? '同步中...' : '同步数据'}
+            </Button>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <Button
+              onClick={handleClearData}
+              className="px-4 py-2 rounded-full bg-gradient-to-r from-orange-600 to-orange-700 
+                       hover:from-orange-500 hover:to-orange-600 border-2 border-orange-400/50
+                       shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:shadow-[0_0_30px_rgba(249,115,22,0.6)]
+                       transition-all duration-300 text-white font-bold"
+            >
+              🗑️ 清除数据
+            </Button>
+          </motion.div>
+        </div>
+      )}
+
+      {/* 密码输入对话框 */}
+      <AlertDialog open={showPasswordInput} onOpenChange={setShowPasswordInput}>
+        <AlertDialogContent className="max-w-md bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 border-2 border-cyan-400/50">
+          <div className="space-y-6 p-6">
+            <div className="text-center">
+              <NeonText className="text-2xl mb-2">🔐 管理员验证</NeonText>
+              <p className="text-gray-300">请输入管理员密码以访问设置功能</p>
+            </div>
+
+            <Input
+              type="password"
+              placeholder="输入密码..."
+              value={passwordInput}
+              onChange={e => setPasswordInput(e.target.value)}
+              onKeyPress={e => e.key === 'Enter' && handlePasswordSubmit()}
+              className="bg-black/50 border-cyan-400/50 text-cyan-400 placeholder:text-cyan-400/50
+                       focus:border-cyan-400 focus:ring-cyan-400/50"
+            />
+
+            <div className="flex gap-3">
+              <GamingButton onClick={handlePasswordSubmit} className="flex-1">
+                🔓 验证
+              </GamingButton>
+              <Button
+                onClick={() => {
+                  setShowPasswordInput(false);
+                  setPasswordInput('');
+                }}
+                className="flex-1 bg-gray-600/20 hover:bg-gray-600/30 text-gray-400 border-gray-400/50"
+              >
+                取消
+              </Button>
+            </div>
+
+            <div className="text-center text-sm text-gray-400 space-y-2">
+              {/* <p>💡 可用密码：</p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {CONFIG.ADMIN_PASSWORDS.map((password, index) => (
+                  <span
+                    key={index}
+                    className="bg-gray-800/50 px-2 py-1 rounded text-xs font-mono"
+                  >
+                    {password}
+                  </span>
+                ))}
+              </div> */}
+              {/* <p className="text-xs">
+                💡 要修改密码，请编辑{' '}
+                <code className="bg-gray-800/50 px-1 rounded">
+                  src/projects/ProgressDraw/config.js
+                </code>
+              </p> */}
+              <p className="text-xs">
+                🔒 剩余尝试次数:{' '}
+                {CONFIG.SECURITY.MAX_LOGIN_ATTEMPTS - loginAttempts}
+              </p>
+            </div>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="container mx-auto p-6 space-y-8 relative z-10">
         <motion.div
