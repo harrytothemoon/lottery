@@ -1,7 +1,6 @@
-import React, {
+import  {
   useState,
   useCallback,
-  useRef,
   useMemo,
   useEffect,
 } from 'react';
@@ -12,7 +11,6 @@ import { Input } from '../../components/ui/input';
 import {
   Settings,
   Search,
-  Trophy,
   Users,
   Target,
   Zap,
@@ -597,7 +595,7 @@ const ProgressDraw = () => {
                  linear-gradient(rgba(59,130,246,0.1) 1px, transparent 1px),
                  linear-gradient(90deg, rgba(59,130,246,0.1) 1px, transparent 1px)
                `,
-            backgroundSize: '50px 50px',
+            backgroundSize: "50px 50px",
           }}
         />
       </div>
@@ -687,7 +685,7 @@ const ProgressDraw = () => {
               disabled={isLoading}
             >
               <Cloud className="w-4 h-4 mr-1" />
-              {isLoading ? '同步中...' : '同步数据'}
+              {isLoading ? "同步中..." : "同步数据"}
             </Button>
           </motion.div>
         </div>
@@ -706,8 +704,8 @@ const ProgressDraw = () => {
               type="password"
               placeholder="输入密码..."
               value={passwordInput}
-              onChange={e => setPasswordInput(e.target.value)}
-              onKeyPress={e => e.key === 'Enter' && handlePasswordSubmit()}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handlePasswordSubmit()}
               className="bg-black/50 border-cyan-400/50 text-cyan-400 placeholder:text-cyan-400/50
                        focus:border-cyan-400 focus:ring-cyan-400/50"
             />
@@ -719,7 +717,7 @@ const ProgressDraw = () => {
               <Button
                 onClick={() => {
                   setShowPasswordInput(false);
-                  setPasswordInput('');
+                  setPasswordInput("");
                 }}
                 className="flex-1 bg-gray-600/20 hover:bg-gray-600/30 text-gray-400 border-gray-400/50"
               >
@@ -728,25 +726,8 @@ const ProgressDraw = () => {
             </div>
 
             <div className="text-center text-sm text-gray-400 space-y-2">
-              {/* <p>💡 可用密码：</p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {CONFIG.ADMIN_PASSWORDS.map((password, index) => (
-                  <span
-                    key={index}
-                    className="bg-gray-800/50 px-2 py-1 rounded text-xs font-mono"
-                  >
-                    {password}
-                  </span>
-                ))}
-              </div> */}
-              {/* <p className="text-xs">
-                💡 要修改密码，请编辑{' '}
-                <code className="bg-gray-800/50 px-1 rounded">
-                  src/projects/ProgressDraw/config.js
-                </code>
-              </p> */}
               <p className="text-xs">
-                🔒 剩余尝试次数:{' '}
+                🔒 剩余尝试次数:{" "}
                 {CONFIG.SECURITY.MAX_LOGIN_ATTEMPTS - loginAttempts}
               </p>
             </div>
@@ -761,32 +742,20 @@ const ProgressDraw = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
         >
-          <motion.div
-            className="inline-block mb-6"
-            animate={{
-              textShadow: [
-                '0 0 20px rgba(59,130,246,0.5)',
-                '0 0 30px rgba(168,85,247,0.5)',
-                '0 0 20px rgba(34,211,238,0.5)',
-              ],
-            }}
-            transition={{ duration: 3, repeat: Infinity }}
-          >
-            <h1
-              className="text-6xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 
-                         bg-clip-text text-transparent mb-4"
-            >
-              🎮 PROGRESS LOTTERY
-            </h1>
-          </motion.div>
+            <div className="text-center">
+              <img
+                src={`${process.env.PUBLIC_URL}/progress/logo.jpeg`}
+                alt="Naseebet Logo"
+                className="mx-auto h-50 w-auto rounded-xl"
+              />
+            </div>
           <motion.p
-            className="text-xl text-gray-300 max-w-2xl mx-auto"
+            className="text-2xl text-gray-300 max-w-2xl mx-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
           >
-            Level up your lottery experience! Track your progress and unlock
-            amazing gaming prizes! 🚀
+            More Tickets = Higher Ranking = Bigger Prizes !
           </motion.p>
         </motion.div>
 
@@ -819,7 +788,7 @@ const ProgressDraw = () => {
                 type="text"
                 placeholder="🔍 Enter username to search..."
                 value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="bg-black/50 border-green-400/50 text-green-400 placeholder:text-green-400/50
                          focus:border-green-400 focus:ring-green-400/50"
               />
