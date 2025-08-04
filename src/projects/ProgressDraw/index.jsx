@@ -1,9 +1,4 @@
-import  {
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-} from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { Button } from '../../components/ui/button';
@@ -29,10 +24,10 @@ import { CONFIG, verifyPassword, hasAdminQuery } from './config';
 import { googleSheetsAPI, GOOGLE_SHEETS_CONFIG } from './googleSheets';
 
 const DEFAULT_MILESTONES = [
-  { threshold: 2000, prize: '🎮 Gaming Headset', achieved: false },
-  { threshold: 5000, prize: '💰 $5,000 Cash Prize', achieved: false },
-  { threshold: 10000, prize: '🏆 Premium Gaming Setup', achieved: false },
-  { threshold: 20000, prize: '💎 $50,000 JACKPOT', achieved: false },
+  { threshold: 200, prize: '🎮 Gaming Headset', achieved: false },
+  { threshold: 500, prize: '💰 $5,000 Cash Prize', achieved: false },
+  { threshold: 1000, prize: '🏆 Premium Gaming Setup', achieved: false },
+  { threshold: 2000, prize: '💎 $50,000 JACKPOT', achieved: false },
 ];
 
 const maskUsername = username => {
@@ -134,13 +129,15 @@ const SettingsModal = ({
             <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-cyan-400/30 p-6">
               <div className="flex items-center gap-3 mb-4">
                 <Users className="w-6 h-6 text-cyan-400" />
-                <NeonText className="text-xl">Google Sheets 数据源</NeonText>
+                <NeonText className="text-xl">
+                  Google Sheets Data Source
+                </NeonText>
               </div>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-cyan-400 mb-2">
-                    Google Sheets 链接
+                    Google Sheets URL
                   </label>
                   <Input
                     type="url"
@@ -157,18 +154,18 @@ const SettingsModal = ({
                     disabled={isTestingConnection}
                     className="flex-1"
                   >
-                    {isTestingConnection ? '测试中...' : '🔗 测试连接'}
+                    {isTestingConnection ? 'Testing...' : '🔗 Test Connection'}
                   </GamingButton>
                   <GamingButton
                     onClick={handleSheetUrlSubmit}
                     className="flex-1"
                   >
-                    ✅ 保存配置
+                    ✅ Save Configuration
                   </GamingButton>
                 </div>
 
                 <GamingButton onClick={onRefreshData} className="w-full">
-                  🔄 刷新数据
+                  🔄 Refresh Data
                 </GamingButton>
 
                 {connectionStatus && (
@@ -181,14 +178,16 @@ const SettingsModal = ({
                   >
                     {connectionStatus.success ? (
                       <div>
-                        <p className="font-bold">✅ 连接成功！</p>
-                        <p>用户数量: {connectionStatus.userCount}</p>
-                        <p>总票数: {connectionStatus.totalTickets}</p>
-                        <p>里程碑数量: {connectionStatus.milestoneCount}</p>
+                        <p className="font-bold">✅ Connection Successful!</p>
+                        <p>Player Count: {connectionStatus.userCount}</p>
+                        <p>Total Tickets: {connectionStatus.totalTickets}</p>
+                        <p>
+                          Milestone Count: {connectionStatus.milestoneCount}
+                        </p>
                       </div>
                     ) : (
                       <div>
-                        <p className="font-bold">❌ 连接失败</p>
+                        <p className="font-bold">❌ Connection Failed</p>
                         <p>{connectionStatus.error}</p>
                       </div>
                     )}
@@ -210,7 +209,7 @@ const SettingsModal = ({
   );
 };
 
-const ProgressBar = ({ current, milestones }) => {
+const ProgressBar = ({ current, milestones, totalTickets }) => {
   const maxThreshold = Math.max(...milestones.map(m => m.threshold));
   const progressPercentage = Math.min((current / maxThreshold) * 100, 100);
 
@@ -236,10 +235,19 @@ const ProgressBar = ({ current, milestones }) => {
       </div>
 
       <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <NeonText className="text-2xl">
-            Total Tickets: {current.toLocaleString()}
-          </NeonText>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-3">
+              <NeonText className="text-2xl">
+                Total Players: {current.toLocaleString()}
+              </NeonText>
+            </div>
+            <div className="flex items-center gap-3">
+              <NeonText color="purple" className="text-xl">
+                Total Tickets: {totalTickets.toLocaleString()}
+              </NeonText>
+            </div>
+          </div>
           <NeonText color="green" className="text-2xl">
             {progressPercentage.toFixed(1)}%
           </NeonText>
@@ -281,7 +289,7 @@ const ProgressBar = ({ current, milestones }) => {
                     {milestone.prize}
                   </p>
                   <p className="text-cyan-400">
-                    {milestone.threshold.toLocaleString()} tickets
+                    {milestone.threshold.toLocaleString()} players
                   </p>
                 </div>
                 <div
@@ -410,7 +418,7 @@ const ParticipantsList = ({ participants, searchTerm }) => {
 const ProgressDraw = () => {
   useFavicon();
 
-  // 状态管理
+  // State management
   const [accountList, setAccountList] = useState({});
   const [milestones, setMilestones] = useState(DEFAULT_MILESTONES);
   const [searchTerm, setSearchTerm] = useState('');
@@ -419,7 +427,7 @@ const ProgressDraw = () => {
   const [lastSync, setLastSync] = useState(null);
   const [sheetUrl, setSheetUrl] = useState(GOOGLE_SHEETS_CONFIG.SHEET_URL);
 
-  // 权限控制 - 检查query参数和登录状态
+  // Permission control - check query parameters and login status
   const hasAdminAccess = hasAdminQuery();
   const [isAdmin, setIsAdmin] = useState(() => {
     return (
@@ -430,11 +438,11 @@ const ProgressDraw = () => {
   const [passwordInput, setPasswordInput] = useState('');
   const [loginAttempts, setLoginAttempts] = useState(0);
 
-  // 数据加载函数
+  // Data loading function
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // 从 Google Sheets 加载所有数据（用户数据和里程碑数据）
+      // Load all data from Google Sheets (user data and milestone data)
       const { accountList: accountData, milestones: milestoneData } =
         await googleSheetsAPI.fetchAllData(sheetUrl);
 
@@ -442,7 +450,7 @@ const ProgressDraw = () => {
       setMilestones(milestoneData);
       setLastSync(new Date().toISOString());
 
-      // 缓存到本地存储
+      // Cache to local storage
       localStorage.setItem(
         'progressDraw_accountList',
         JSON.stringify(accountData)
@@ -453,8 +461,8 @@ const ProgressDraw = () => {
       );
       localStorage.setItem('progressDraw_lastSync', new Date().toISOString());
     } catch (error) {
-      console.error('Google Sheets 数据加载失败:', error);
-      // Fallback 到本地存储
+      console.error('Google Sheets data loading failed:', error);
+      // Fallback to local storage
       try {
         const savedAccounts = localStorage.getItem('progressDraw_accountList');
         const savedMilestones = localStorage.getItem('progressDraw_milestones');
@@ -466,14 +474,14 @@ const ProgressDraw = () => {
         );
         setLastSync(savedLastSync);
       } catch (localError) {
-        console.error('本地数据加载也失败:', localError);
+        console.error('Local data loading also failed:', localError);
       }
     } finally {
       setIsLoading(false);
     }
   }, [sheetUrl]);
 
-  // 在线状态监测
+  // Online status monitoring
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -487,9 +495,9 @@ const ProgressDraw = () => {
     };
   }, []);
 
-  // 初始化数据加载
+  // Initialize data loading
   useEffect(() => {
-    // 从本地存储加载保存的 Sheet URL
+    // Load saved Sheet URL from local storage
     const savedSheetUrl = localStorage.getItem('progressDraw_sheetUrl');
     if (savedSheetUrl) {
       setSheetUrl(savedSheetUrl);
@@ -498,7 +506,7 @@ const ProgressDraw = () => {
     loadData();
   }, []);
 
-  // 自动刷新数据
+  // Auto refresh data
   useEffect(() => {
     if (GOOGLE_SHEETS_CONFIG.AUTO_REFRESH) {
       const interval = setInterval(() => {
@@ -509,12 +517,12 @@ const ProgressDraw = () => {
     }
   }, [loadData]);
 
-  // 自动登出定时器
+  // Auto logout timer
   useEffect(() => {
     if (isAdmin && CONFIG.SECURITY.AUTO_LOGOUT_MINUTES > 0) {
       const timer = setTimeout(() => {
         handleLogout();
-        alert('会话已过期，请重新登录');
+        alert('Session expired, please login again');
       }, CONFIG.SECURITY.AUTO_LOGOUT_MINUTES * 60 * 1000);
 
       return () => clearTimeout(timer);
@@ -528,6 +536,10 @@ const ProgressDraw = () => {
     );
   }, [accountList]);
 
+  const totalPlayers = useMemo(() => {
+    return Object.keys(accountList).length;
+  }, [accountList]);
+
   const handleSheetUrlChange = useCallback(newSheetUrl => {
     setSheetUrl(newSheetUrl);
     localStorage.setItem('progressDraw_sheetUrl', newSheetUrl);
@@ -539,7 +551,7 @@ const ProgressDraw = () => {
 
   const handlePasswordSubmit = useCallback(() => {
     if (loginAttempts >= CONFIG.SECURITY.MAX_LOGIN_ATTEMPTS) {
-      alert('登录尝试次数过多，请稍后再试');
+      alert('Too many login attempts, please try again later');
       return;
     }
 
@@ -552,9 +564,9 @@ const ProgressDraw = () => {
     } else {
       setLoginAttempts(prev => prev + 1);
       alert(
-        `密码错误！还可以尝试 ${
+        `Wrong password! You can try ${
           CONFIG.SECURITY.MAX_LOGIN_ATTEMPTS - loginAttempts - 1
-        } 次`
+        } more times`
       );
       setPasswordInput('');
     }
@@ -595,12 +607,12 @@ const ProgressDraw = () => {
                  linear-gradient(rgba(59,130,246,0.1) 1px, transparent 1px),
                  linear-gradient(90deg, rgba(59,130,246,0.1) 1px, transparent 1px)
                `,
-            backgroundSize: "50px 50px",
+            backgroundSize: '50px 50px',
           }}
         />
       </div>
 
-      {/* 在线状态指示器 */}
+      {/* Online status indicator */}
       <motion.div
         className="fixed top-4 right-4 z-[20] flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-4 py-2 border border-cyan-400/30"
         initial={{ opacity: 0, y: -20 }}
@@ -610,17 +622,17 @@ const ProgressDraw = () => {
         {isOnline ? (
           <>
             <Wifi className="w-4 h-4 text-green-400" />
-            <span className="text-green-400 text-sm font-medium">在线</span>
+            <span className="text-green-400 text-sm font-medium">Online</span>
             {lastSync && (
               <span className="text-gray-400 text-xs">
-                最后同步: {new Date(lastSync).toLocaleTimeString()}
+                Last sync: {new Date(lastSync).toLocaleTimeString()}
               </span>
             )}
           </>
         ) : (
           <>
             <WifiOff className="w-4 h-4 text-red-400" />
-            <span className="text-red-400 text-sm font-medium">离线</span>
+            <span className="text-red-400 text-sm font-medium">Offline</span>
           </>
         )}
         {isLoading && (
@@ -632,7 +644,7 @@ const ProgressDraw = () => {
         )}
       </motion.div>
 
-      {/* 管理员权限控制 - 只有在有admin query参数时才显示 */}
+      {/* Admin permission control - only show when admin query parameter is present */}
       {hasAdminAccess && (
         <>
           {isAdmin ? (
@@ -661,7 +673,7 @@ const ProgressDraw = () => {
         </>
       )}
 
-      {/* 管理员登出按钮 */}
+      {/* Admin logout button */}
       {hasAdminAccess && isAdmin && (
         <div className="fixed bottom-4 left-20 z-[20] flex gap-3">
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
@@ -672,7 +684,7 @@ const ProgressDraw = () => {
                        shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)]
                        transition-all duration-300 text-white font-bold"
             >
-              退出管理
+              Logout Admin
             </Button>
           </motion.div>
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
@@ -685,49 +697,53 @@ const ProgressDraw = () => {
               disabled={isLoading}
             >
               <Cloud className="w-4 h-4 mr-1" />
-              {isLoading ? "同步中..." : "同步数据"}
+              {isLoading ? 'Syncing...' : 'Sync Data'}
             </Button>
           </motion.div>
         </div>
       )}
 
-      {/* 密码输入对话框 */}
+      {/* Password input dialog */}
       <AlertDialog open={showPasswordInput} onOpenChange={setShowPasswordInput}>
         <AlertDialogContent className="max-w-md bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 border-2 border-cyan-400/50">
           <div className="space-y-6 p-6">
             <div className="text-center">
-              <NeonText className="text-2xl mb-2">🔐 管理员验证</NeonText>
-              <p className="text-gray-300">请输入管理员密码以访问设置功能</p>
+              <NeonText className="text-2xl mb-2">
+                🔐 Admin Verification
+              </NeonText>
+              <p className="text-gray-300">
+                Please enter admin password to access settings
+              </p>
             </div>
 
             <Input
               type="password"
-              placeholder="输入密码..."
+              placeholder="Enter password..."
               value={passwordInput}
-              onChange={(e) => setPasswordInput(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handlePasswordSubmit()}
+              onChange={e => setPasswordInput(e.target.value)}
+              onKeyPress={e => e.key === 'Enter' && handlePasswordSubmit()}
               className="bg-black/50 border-cyan-400/50 text-cyan-400 placeholder:text-cyan-400/50
                        focus:border-cyan-400 focus:ring-cyan-400/50"
             />
 
             <div className="flex gap-3">
               <GamingButton onClick={handlePasswordSubmit} className="flex-1">
-                🔓 验证
+                🔓 Verify
               </GamingButton>
               <Button
                 onClick={() => {
                   setShowPasswordInput(false);
-                  setPasswordInput("");
+                  setPasswordInput('');
                 }}
                 className="flex-1 bg-gray-600/20 hover:bg-gray-600/30 text-gray-400 border-gray-400/50"
               >
-                取消
+                Cancel
               </Button>
             </div>
 
             <div className="text-center text-sm text-gray-400 space-y-2">
               <p className="text-xs">
-                🔒 剩余尝试次数:{" "}
+                🔒 Remaining attempts:{' '}
                 {CONFIG.SECURITY.MAX_LOGIN_ATTEMPTS - loginAttempts}
               </p>
             </div>
@@ -742,13 +758,13 @@ const ProgressDraw = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
         >
-            <div className="text-center">
-              <img
-                src={`${process.env.PUBLIC_URL}/progress/logo.jpeg`}
-                alt="Naseebet Logo"
-                className="mx-auto h-50 w-auto rounded-xl"
-              />
-            </div>
+          <div className="text-center">
+            <img
+              src={`${process.env.PUBLIC_URL}/progress/logo.jpeg`}
+              alt="Naseebet Logo"
+              className="mx-auto h-50 w-auto rounded-xl"
+            />
+          </div>
           <motion.p
             className="text-2xl text-gray-300 max-w-2xl mx-auto"
             initial={{ opacity: 0 }}
@@ -764,7 +780,11 @@ const ProgressDraw = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.3 }}
         >
-          <ProgressBar current={totalTickets} milestones={milestones} />
+          <ProgressBar
+            current={totalPlayers}
+            totalTickets={totalTickets}
+            milestones={milestones}
+          />
         </motion.div>
 
         <div className="flex flex-col xl:flex-row gap-8">
@@ -788,7 +808,7 @@ const ProgressDraw = () => {
                 type="text"
                 placeholder="🔍 Enter username to search..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="bg-black/50 border-green-400/50 text-green-400 placeholder:text-green-400/50
                          focus:border-green-400 focus:ring-green-400/50"
               />
