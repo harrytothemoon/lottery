@@ -434,40 +434,42 @@ const ParticipantsList = ({ participants, searchTerm }) => {
 
       {/* Ticket Modal */}
       <AlertDialog open={showTicketModal} onOpenChange={setShowTicketModal}>
-        <AlertDialogContent className="max-w-2xl bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 border-2 border-cyan-400/50">
-          <div className="space-y-6 p-6">
+        <AlertDialogContent className="max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 border-2 border-cyan-400/50">
+          <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
             <div className="text-center">
-              <NeonText className="text-2xl mb-2">🎫 All Tickets</NeonText>
-              <p className="text-gray-300">
+              <NeonText className="text-xl sm:text-2xl mb-2">
+                🎫 All Tickets
+              </NeonText>
+              <p className="text-gray-300 text-sm sm:text-base">
                 {selectedParticipant &&
                   maskUsername(selectedParticipant.username)}
               </p>
             </div>
 
             {selectedParticipant && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-black/30 rounded-lg border border-cyan-400/30">
-                  <div className="flex items-center gap-3">
-                    <Users className="w-5 h-5 text-cyan-400" />
-                    <span className="text-cyan-400 font-bold">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-black/30 rounded-lg border border-cyan-400/30 gap-2 sm:gap-0">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400" />
+                    <span className="text-cyan-400 font-bold text-sm sm:text-base">
                       Total Tickets:
                     </span>
                   </div>
-                  <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-bold text-xl">
+                  <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-bold text-lg sm:text-xl">
                     {selectedParticipant.ticketCount}
                   </span>
                 </div>
 
-                <div className="bg-black/30 rounded-lg border border-cyan-400/30 p-4">
-                  <div className="text-cyan-400 font-bold mb-3">
+                <div className="bg-black/30 rounded-lg border border-cyan-400/30 p-3 sm:p-4">
+                  <div className="text-cyan-400 font-bold mb-2 sm:mb-3 text-sm sm:text-base">
                     Ticket Numbers:
                   </div>
                   <div className="max-h-60 overflow-y-auto pr-2">
-                    <div className="grid grid-cols-5 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                       {selectedParticipant.allTickets.map((ticket, index) => (
                         <motion.div
                           key={index}
-                          className="bg-cyan-600/20 border border-cyan-400/50 rounded p-2 text-center text-cyan-400 font-mono text-sm"
+                          className="bg-cyan-600/20 border border-cyan-400/50 rounded p-1 sm:p-2 text-center text-cyan-400 font-mono text-xs sm:text-sm"
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: index * 0.05 }}
@@ -483,7 +485,7 @@ const ParticipantsList = ({ participants, searchTerm }) => {
 
             <GamingButton
               onClick={() => setShowTicketModal(false)}
-              className="w-full h-12"
+              className="w-full h-10 sm:h-12 text-sm sm:text-base"
             >
               ✅ Close
             </GamingButton>
