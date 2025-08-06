@@ -321,7 +321,8 @@ const ProgressBar = ({ current, milestones, totalTickets }) => {
 };
 
 const ParticipantsList = ({ participants, searchTerm }) => {
-  const ROW_HEIGHT = 70;
+  const [selectedParticipant, setSelectedParticipant] = useState(null);
+  const [showTicketModal, setShowTicketModal] = useState(false);
 
   const filteredParticipants = useMemo(() => {
     const flattenedParticipants = Object.entries(participants).map(
@@ -329,6 +330,7 @@ const ParticipantsList = ({ participants, searchTerm }) => {
         username,
         ticketCount: tickets.length,
         tickets: tickets.join(', '),
+        allTickets: tickets,
       })
     );
 
@@ -338,6 +340,11 @@ const ParticipantsList = ({ participants, searchTerm }) => {
       participant.username.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [participants, searchTerm]);
+
+  const handleShowTickets = useCallback(participant => {
+    setSelectedParticipant(participant);
+    setShowTicketModal(true);
+  }, []);
 
   const Row = ({ index, style }) => {
     const participant = filteredParticipants[index];
@@ -362,8 +369,19 @@ const ParticipantsList = ({ participants, searchTerm }) => {
               {participant.ticketCount}
             </span>
           </div>
-          <div className="text-sm text-gray-300 truncate">
-            {participant.tickets}
+          <div className="text-sm text-gray-300">
+            <div className="flex items-center gap-2">
+              <span className="truncate flex-1">
+                {participant.allTickets.slice(0, 3).join(', ')}
+                {participant.ticketCount > 3 && '...'}
+              </span>
+              <Button
+                onClick={() => handleShowTickets(participant)}
+                className="px-3 py-1 text-xs bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-400/50 text-cyan-400 rounded transition-all duration-200 hover:scale-105"
+              >
+                Detail
+              </Button>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -371,47 +389,108 @@ const ParticipantsList = ({ participants, searchTerm }) => {
   };
 
   return (
-    <div
-      className="bg-black/40 backdrop-blur-sm rounded-2xl border-2 border-purple-400/30 p-6 flex-1
+    <>
+      <div
+        className="bg-black/40 backdrop-blur-sm rounded-2xl border-2 border-purple-400/30 p-6 flex-1
                     shadow-[0_0_30px_rgba(168,85,247,0.2)]"
-    >
-      <div className="flex items-center gap-3 mb-6">
-        <Users className="w-8 h-8 text-purple-400" />
-        <NeonText color="purple" className="text-3xl">
-          PARTICIPANTS
-        </NeonText>
-        <div className="ml-auto">
-          <NeonText color="cyan" className="text-xl">
-            {filteredParticipants.length} players
+      >
+        <div className="flex items-center gap-3 mb-6">
+          <Users className="w-8 h-8 text-purple-400" />
+          <NeonText color="purple" className="text-3xl">
+            PARTICIPANTS
           </NeonText>
+          <div className="ml-auto">
+            <NeonText color="cyan" className="text-xl">
+              {filteredParticipants.length} players
+            </NeonText>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-6 mb-4 p-4 bg-black/50 rounded-lg border border-cyan-400/30">
+          <NeonText className="font-bold">Username</NeonText>
+          <NeonText className="font-bold text-center">Tickets</NeonText>
+          <NeonText className="font-bold">Numbers</NeonText>
+        </div>
+
+        <div
+          className="flex-1 border-2 border-cyan-400/30 rounded-lg overflow-hidden"
+          style={{ height: '500px' }}
+        >
+          <AutoSizer>
+            {({ height, width }) => (
+              <List
+                height={height}
+                itemCount={filteredParticipants.length}
+                itemSize={70}
+                width={width}
+                overscanCount={5}
+              >
+                {Row}
+              </List>
+            )}
+          </AutoSizer>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-6 mb-4 p-4 bg-black/50 rounded-lg border border-cyan-400/30">
-        <NeonText className="font-bold">Username</NeonText>
-        <NeonText className="font-bold text-center">Tickets</NeonText>
-        <NeonText className="font-bold">Numbers</NeonText>
-      </div>
+      {/* Ticket Modal */}
+      <AlertDialog open={showTicketModal} onOpenChange={setShowTicketModal}>
+        <AlertDialogContent className="max-w-2xl bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 border-2 border-cyan-400/50">
+          <div className="space-y-6 p-6">
+            <div className="text-center">
+              <NeonText className="text-2xl mb-2">🎫 All Tickets</NeonText>
+              <p className="text-gray-300">
+                {selectedParticipant &&
+                  maskUsername(selectedParticipant.username)}
+              </p>
+            </div>
 
-      <div
-        className="flex-1 border-2 border-cyan-400/30 rounded-lg overflow-hidden"
-        style={{ height: '500px' }}
-      >
-        <AutoSizer>
-          {({ height, width }) => (
-            <List
-              height={height}
-              itemCount={filteredParticipants.length}
-              itemSize={ROW_HEIGHT}
-              width={width}
-              overscanCount={5}
+            {selectedParticipant && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-black/30 rounded-lg border border-cyan-400/30">
+                  <div className="flex items-center gap-3">
+                    <Users className="w-5 h-5 text-cyan-400" />
+                    <span className="text-cyan-400 font-bold">
+                      Total Tickets:
+                    </span>
+                  </div>
+                  <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-bold text-xl">
+                    {selectedParticipant.ticketCount}
+                  </span>
+                </div>
+
+                <div className="bg-black/30 rounded-lg border border-cyan-400/30 p-4">
+                  <div className="text-cyan-400 font-bold mb-3">
+                    Ticket Numbers:
+                  </div>
+                  <div className="max-h-60 overflow-y-auto pr-2">
+                    <div className="grid grid-cols-5 gap-2">
+                      {selectedParticipant.allTickets.map((ticket, index) => (
+                        <motion.div
+                          key={index}
+                          className="bg-cyan-600/20 border border-cyan-400/50 rounded p-2 text-center text-cyan-400 font-mono text-sm"
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: index * 0.05 }}
+                        >
+                          {ticket}
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <GamingButton
+              onClick={() => setShowTicketModal(false)}
+              className="w-full h-12"
             >
-              {Row}
-            </List>
-          )}
-        </AutoSizer>
-      </div>
-    </div>
+              ✅ Close
+            </GamingButton>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
