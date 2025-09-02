@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Card, CardContent } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Card, CardContent } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import {
   Settings,
   Cloud,
@@ -10,26 +10,26 @@ import {
   Trophy,
   Users,
   Crown,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   AlertDialog,
   AlertDialogContent,
-} from '../../components/ui/alert-dialog';
-import { motion } from 'framer-motion';
-import useSound from 'use-sound';
-import Confetti from 'react-confetti';
-import { useTheme } from '../../themes';
-import useFavicon from '../../hooks/index';
-import { hasAdminQuery } from './config';
-import { googleSheetsAPI, GOOGLE_SHEETS_CONFIG } from './googleSheets';
-import spinSound from '../../sounds/spin.wav';
-import winSound from '../../sounds/win.mp3';
-import ChristmasEffects from '../../components/christmasEffects';
+} from "../../components/ui/alert-dialog";
+import { motion } from "framer-motion";
+import useSound from "use-sound";
+import Confetti from "react-confetti";
+import { useTheme } from "../../themes";
+import useFavicon from "../../hooks/index";
+import { hasAdminQuery } from "./config";
+import { googleSheetsAPI, GOOGLE_SHEETS_CONFIG } from "./googleSheets";
+import spinSound from "../../sounds/spin.wav";
+import winSound from "../../sounds/win.mp3";
+import ChristmasEffects from "../../components/christmasEffects";
 
 // 用户名遮罩函数
-const maskUsername = username => {
+const maskUsername = (username) => {
   if (!username || username.length <= 3) return username;
-  return `${username.slice(0, 2)}${'*'.repeat(
+  return `${username.slice(0, 2)}${"*".repeat(
     username.length - 3
   )}${username.slice(-1)}`;
 };
@@ -108,7 +108,7 @@ const SettingsModal = ({
                   <Input
                     type="url"
                     value={sheetUrl}
-                    onChange={e => setSheetUrl(e.target.value)}
+                    onChange={(e) => setSheetUrl(e.target.value)}
                     placeholder="https://docs.google.com/spreadsheets/d/..."
                     className="w-full bg-black/70 border-green-400/70 text-white placeholder:text-green-400/70
                               focus:border-green-400 focus:ring-2 focus:ring-green-400/30"
@@ -122,7 +122,7 @@ const SettingsModal = ({
                     className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500
                              text-white font-bold border-2 border-green-400/50 shadow-[0_0_20px_rgba(34,197,94,0.3)]"
                   >
-                    {isTestingConnection ? 'Testing...' : '🔗 Test Connection'}
+                    {isTestingConnection ? "Testing..." : "🔗 Test Connection"}
                   </Button>
                   <Button
                     onClick={handleSheetUrlSubmit}
@@ -145,8 +145,8 @@ const SettingsModal = ({
                   <div
                     className={`p-4 rounded-lg border ${
                       testStatus.success
-                        ? 'bg-green-600/20 border-green-400/50 text-green-400'
-                        : 'bg-red-600/20 border-red-400/50 text-red-400'
+                        ? "bg-green-600/20 border-green-400/50 text-green-400"
+                        : "bg-red-600/20 border-red-400/50 text-red-400"
                     }`}
                   >
                     {testStatus.success ? (
@@ -223,7 +223,7 @@ const WinnerModal = ({
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+            transition={{ type: "spring", stiffness: 260, damping: 20 }}
           >
             <Trophy className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
             <h2 className="text-3xl font-bold text-green-400 mb-4">
@@ -250,7 +250,7 @@ const WinnerModal = ({
 // 转盘组件
 const Reel = ({ spinning, stopSymbol, shouldReveal, theme }) => {
   const symbols = React.useMemo(
-    () => ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+    () => ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
     []
   );
   const [position, setPosition] = useState(
@@ -293,17 +293,17 @@ const SlotMachine = React.forwardRef(
     const [playSpinSound] = useSound(spinSound, { volume: 0.3 });
 
     const spin = useCallback(
-      result => {
+      (result) => {
         playSpinSound();
         setSpinning(true);
         setStopSymbols(Array(digitCount).fill(null));
         setRevealedCount(0);
 
-        const revealNextDigit = index => {
+        const revealNextDigit = (index) => {
           if (index < digitCount) {
             setTimeout(
               () => {
-                setStopSymbols(prev => {
+                setStopSymbols((prev) => {
                   const newSymbols = [...prev];
                   newSymbols[index] = result[index];
                   return newSymbols;
@@ -315,7 +315,7 @@ const SlotMachine = React.forwardRef(
             );
           } else {
             setSpinning(false);
-            onComplete(result.join(''));
+            onComplete(result.join(""));
           }
         };
 
@@ -362,7 +362,7 @@ const WinnersList = ({ winners, theme }) => {
       </div>
 
       <div className="max-h-96 overflow-y-auto">
-        {winners.map(winner => (
+        {winners.map((winner) => (
           <div
             key={winner.id}
             className="p-4 mb-3 rounded-lg bg-yellow-900/20 border border-yellow-400/40 hover:border-yellow-400/70 
@@ -375,9 +375,6 @@ const WinnersList = ({ winners, theme }) => {
                   {maskUsername(winner.username)}
                 </span>
               </div>
-              <span className="text-yellow-400 font-bold text-sm">
-                {winner.timestamp}
-              </span>
             </div>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-yellow-300 text-sm">Prize:</span>
@@ -403,15 +400,17 @@ const ParticipantsList = ({
   totalAvailableTickets,
   usedTickets,
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const filteredParticipants = React.useMemo(() => {
     if (!searchTerm) return participants;
     return participants.filter(
-      participant =>
+      (participant) =>
         participant.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        participant.tickets.some(ticket => ticket.includes(searchTerm)) ||
-        participant.remainingTickets.some(ticket => ticket.includes(searchTerm))
+        participant.tickets.some((ticket) => ticket.includes(searchTerm)) ||
+        participant.remainingTickets.some((ticket) =>
+          ticket.includes(searchTerm)
+        )
     );
   }, [participants, searchTerm]);
 
@@ -442,7 +441,7 @@ const ParticipantsList = ({
         type="text"
         placeholder="Search username or ticket number..."
         value={searchTerm}
-        onChange={e => setSearchTerm(e.target.value)}
+        onChange={(e) => setSearchTerm(e.target.value)}
         className="w-full mb-4 bg-black/70 border-green-400/70 text-white placeholder:text-green-400/70
                   focus:border-green-400 focus:ring-2 focus:ring-green-400/30"
       />
@@ -478,8 +477,8 @@ const ParticipantsList = ({
                     key={ticketIndex}
                     className={`px-2 py-1 text-xs rounded border transition-all ${
                       isUsed
-                        ? 'bg-red-600/30 text-red-300 border-red-400/50 line-through opacity-60'
-                        : 'bg-green-600/30 text-green-300 border-green-400/50 hover:bg-green-600/40'
+                        ? "bg-red-600/30 text-red-300 border-red-400/50 line-through opacity-60"
+                        : "bg-green-600/30 text-green-300 border-green-400/50 hover:bg-green-600/40"
                     }`}
                   >
                     {ticket}
@@ -497,11 +496,11 @@ const ParticipantsList = ({
 // 主要组件
 const Naseebet = () => {
   useFavicon();
-  const theme = useTheme('green');
+  const theme = useTheme("green");
   const [accountList, setAccountList] = useState({});
   const [winnerResult, setWinnerResult] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [prize, setPrize] = useState('');
+  const [prize, setPrize] = useState("");
   const [digitCount, setDigitCount] = useState(6);
   const [showWinnerModal, setShowWinnerModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -518,12 +517,12 @@ const Naseebet = () => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
@@ -546,15 +545,15 @@ const Naseebet = () => {
             return numericPart.length > max.length ? numericPart : max;
           }
           return max;
-        }, '');
+        }, "");
 
       setDigitCount(maxTicket.length || 6);
       setConnectionStatus({
         success: true,
-        message: 'Data loaded successfully',
+        message: "Data loaded successfully",
       });
     } catch (error) {
-      console.error('Data loading failed:', error);
+      console.error("Data loading failed:", error);
       setConnectionStatus({ success: false, message: error.message });
     } finally {
       setIsLoading(false);
@@ -569,12 +568,12 @@ const Naseebet = () => {
   // 处理抽奖
   const handleDraw = useCallback(() => {
     if (!prize.trim()) {
-      alert('Please enter prize name');
+      alert("Please enter prize name");
       return;
     }
 
     if (Object.keys(accountList).length === 0) {
-      alert('No participant data available');
+      alert("No participant data available");
       return;
     }
 
@@ -583,7 +582,7 @@ const Naseebet = () => {
     // 创建所有票号的数组，排除已抽过的票号
     const allTickets = [];
     Object.entries(accountList).forEach(([username, tickets]) => {
-      tickets.forEach(ticket => {
+      tickets.forEach((ticket) => {
         // 只添加未被抽过的票号
         if (!usedTickets.has(ticket)) {
           allTickets.push({ username, ticket });
@@ -593,7 +592,7 @@ const Naseebet = () => {
 
     // 检查是否还有可抽奖的票号
     if (allTickets.length === 0) {
-      alert('No more tickets available for drawing!');
+      alert("No more tickets available for drawing!");
       setIsDrawing(false);
       return;
     }
@@ -608,7 +607,7 @@ const Naseebet = () => {
 
     // 开始老虎机动画
     slotMachineRef.current?.spin(
-      winningNumber.padStart(digitCount, '0').split('')
+      winningNumber.padStart(digitCount, "0").split("")
     );
 
     const currentWinner = {
@@ -630,7 +629,7 @@ const Naseebet = () => {
   const handleConfirmWinner = useCallback(() => {
     if (winnerResult) {
       // 添加到获奖者列表
-      setWinners(prev => [
+      setWinners((prev) => [
         ...prev,
         {
           id: Date.now(),
@@ -642,7 +641,7 @@ const Naseebet = () => {
       ]);
 
       // 将中奖票号添加到已使用票号集合中
-      setUsedTickets(prev => new Set([...prev, winnerResult.ticket]));
+      setUsedTickets((prev) => new Set([...prev, winnerResult.ticket]));
     }
   }, [winnerResult]);
 
@@ -650,7 +649,7 @@ const Naseebet = () => {
   const participants = React.useMemo(() => {
     return Object.entries(accountList).map(([username, tickets]) => {
       const remainingTickets = tickets.filter(
-        ticket => !usedTickets.has(ticket)
+        (ticket) => !usedTickets.has(ticket)
       );
       return {
         username,
@@ -694,10 +693,10 @@ const Naseebet = () => {
             )}
             <span
               className={`text-sm ${
-                isOnline ? 'text-green-400' : 'text-red-400'
+                isOnline ? "text-green-400" : "text-red-400"
               }`}
             >
-              {isOnline ? 'Connected' : 'Offline'}
+              {isOnline ? "Connected" : "Offline"}
             </span>
           </div>
 
@@ -756,7 +755,7 @@ const Naseebet = () => {
                                   translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"
                     ></div>
                     <div className="relative flex items-center justify-center gap-2">
-                      {isDrawing ? 'Drawing...' : '🎲 Start Draw'}
+                      {isDrawing ? "Drawing..." : "🎲 Start Draw"}
                     </div>
                   </Button>
                 </CardContent>
@@ -777,7 +776,7 @@ const Naseebet = () => {
                   <Input
                     type="text"
                     value={prize}
-                    onChange={e => setPrize(e.target.value)}
+                    onChange={(e) => setPrize(e.target.value)}
                     placeholder="Enter prize name"
                     className="w-full mb-4 bg-black/70 border-green-400/70 text-white placeholder:text-green-400/70 
                              focus:border-green-400 focus:ring-2 focus:ring-green-400/30"
@@ -802,8 +801,8 @@ const Naseebet = () => {
             <div
               className={`text-center my-6 p-4 rounded-lg border ${
                 connectionStatus.success
-                  ? 'bg-green-600/20 border-green-400/50 text-green-400'
-                  : 'bg-red-600/20 border-red-400/50 text-red-400'
+                  ? "bg-green-600/20 border-green-400/50 text-green-400"
+                  : "bg-red-600/20 border-red-400/50 text-red-400"
               }`}
             >
               {connectionStatus.message}
